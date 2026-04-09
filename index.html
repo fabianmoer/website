@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>~/yourname — nvim</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Catppuccin Mocha palette */
+      --base:    #1e1e2e;
+      --mantle:  #181825;
+      --crust:   #11111b;
+      --surface0:#313244;
+      --surface1:#45475a;
+      --surface2:#585b70;
+      --overlay0:#6c7086;
+      --overlay1:#7f849c;
+      --text:    #cdd6f4;
+      --subtext0:#a6adc8;
+      --subtext1:#bac2de;
+      --rosewater:#f5e0dc;
+      --flamingo: #f2cdcd;
+      --pink:    #f38ba8;
+      --mauve:   #cba6f7;
+      --red:     #f38ba8;
+      --maroon:  #eba0ac;
+      --peach:   #fab387;
+      --yellow:  #f9e2af;
+      --green:   #a6e3a1;
+      --teal:    #94e2d5;
+      --sky:     #89dceb;
+      --sapphire:#74c7ec;
+      --blue:    #89b4fa;
+      --lavender:#b4befe;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--base);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Tab bar (buffers) ── */
+    #tabbar {
+      background: var(--crust);
+      display: flex;
+      align-items: stretch;
+      border-bottom: 1px solid var(--surface0);
+      min-height: 32px;
+      flex-shrink: 0;
+    }
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 16px;
+      cursor: pointer;
+      border-right: 1px solid var(--surface0);
+      color: var(--overlay1);
+      font-size: 13px;
+      transition: background 0.15s, color 0.15s;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .tab:hover { background: var(--surface0); color: var(--subtext1); }
+    .tab.active {
+      background: var(--base);
+      color: var(--text);
+      border-bottom: 2px solid var(--mauve);
+      margin-bottom: -1px;
+    }
+    .tab .icon { font-size: 12px; }
+    .tab .modified { color: var(--yellow); font-size: 10px; }
+
+    /* ── Main layout ── */
+    #workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── File tree (NvimTree) ── */
+    #filetree {
+      width: 220px;
+      background: var(--mantle);
+      border-right: 1px solid var(--surface0);
+      overflow-y: auto;
+      flex-shrink: 0;
+      padding: 8px 0;
+      font-size: 13px;
+    }
+    #filetree::-webkit-scrollbar { width: 4px; }
+    #filetree::-webkit-scrollbar-thumb { background: var(--surface1); border-radius: 2px; }
+    .tree-header {
+      color: var(--overlay0);
+      padding: 4px 12px 8px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .tree-item {
+      padding: 3px 12px 3px 20px;
+      cursor: pointer;
+      color: var(--subtext0);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.1s, color 0.1s;
+    }
+    .tree-item:hover { background: var(--surface0); color: var(--text); }
+    .tree-item.active { background: var(--surface0); color: var(--mauve); }
+    .tree-item.dir { color: var(--blue); font-weight: 600; padding-left: 12px; }
+    .tree-item.dir:hover { color: var(--sapphire); }
+    .tree-item .ti { font-size: 12px; }
+
+    /* ── Editor area ── */
+    #editor {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Line numbers ── */
+    #linenums {
+      background: var(--base);
+      color: var(--surface2);
+      padding: 16px 4px 16px 16px;
+      text-align: right;
+      font-size: 13px;
+      line-height: 1.6;
+      user-select: none;
+      min-width: 48px;
+      overflow: hidden;
+      flex-shrink: 0;
+      border-right: 1px solid var(--surface0);
+    }
+
+    /* ── Content pane ── */
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 32px 48px 20px;
+      line-height: 1.6;
+      font-size: 13.5px;
+    }
+    #content::-webkit-scrollbar { width: 6px; }
+    #content::-webkit-scrollbar-thumb { background: var(--surface1); border-radius: 3px; }
+
+    /* ── Page sections ── */
+    .page { display: none; animation: fadeIn 0.2s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    /* ── Markdown-like rendering ── */
+    .h1 { color: var(--mauve); font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .h1::before { content: "# "; color: var(--overlay0); }
+    .h2 { color: var(--blue); font-size: 17px; font-weight: 700; margin: 28px 0 8px; }
+    .h2::before { content: "## "; color: var(--overlay0); }
+    .h3 { color: var(--sky); font-size: 14px; font-weight: 700; margin: 20px 0 6px; }
+    .h3::before { content: "### "; color: var(--overlay0); }
+    .meta { color: var(--overlay0); font-size: 12px; margin-bottom: 20px; }
+    .meta span { color: var(--peach); }
+    p { color: var(--text); margin-bottom: 14px; }
+
+    .tag {
+      display: inline-block;
+      background: var(--surface0);
+      color: var(--mauve);
+      border: 1px solid var(--surface1);
+      border-radius: 3px;
+      padding: 1px 7px;
+      font-size: 11px;
+      margin-right: 4px;
+    }
+
+    a { color: var(--sapphire); text-decoration: none; }
+    a:hover { color: var(--sky); text-decoration: underline; }
+
+    /* Code blocks */
+    .code-block {
+      background: var(--mantle);
+      border: 1px solid var(--surface0);
+      border-left: 3px solid var(--mauve);
+      border-radius: 4px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      overflow-x: auto;
+      font-size: 12.5px;
+    }
+    .code-block::-webkit-scrollbar { height: 4px; }
+    .code-block::-webkit-scrollbar-thumb { background: var(--surface1); }
+    .kw  { color: var(--mauve); }
+    .fn  { color: var(--blue); }
+    .str { color: var(--green); }
+    .cm  { color: var(--overlay1); font-style: italic; }
+    .num { color: var(--peach); }
+    .tp  { color: var(--yellow); }
+    .op  { color: var(--teal); }
+
+    /* Callout */
+    .callout {
+      background: var(--mantle);
+      border-left: 3px solid var(--yellow);
+      padding: 12px 16px;
+      margin: 14px 0;
+      border-radius: 0 4px 4px 0;
+      font-size: 13px;
+    }
+    .callout.info { border-color: var(--sapphire); }
+    .callout.tip  { border-color: var(--green); }
+    .callout.warn { border-color: var(--yellow); }
+    .callout .cl-label { font-weight: 700; margin-bottom: 4px; }
+    .callout.info .cl-label { color: var(--sapphire); }
+    .callout.tip  .cl-label { color: var(--green); }
+    .callout.warn .cl-label { color: var(--yellow); }
+
+    hr.sep {
+      border: none;
+      border-top: 1px solid var(--surface0);
+      margin: 24px 0;
+    }
+
+    /* Blog card */
+    .blog-card {
+      background: var(--mantle);
+      border: 1px solid var(--surface0);
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .blog-card:hover { border-color: var(--mauve); background: var(--surface0); }
+    .blog-card .bc-title { color: var(--blue); font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .blog-card .bc-meta  { color: var(--overlay0); font-size: 11px; margin-bottom: 8px; }
+    .blog-card .bc-desc  { color: var(--subtext0); font-size: 12.5px; }
+
+    /* About / skill chips */
+    .skill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 18px; }
+    .skill-chip {
+      background: var(--surface0);
+      border: 1px solid var(--surface1);
+      border-radius: 3px;
+      padding: 3px 10px;
+      font-size: 12px;
+      color: var(--subtext1);
+    }
+    .skill-chip.hl { border-color: var(--mauve); color: var(--mauve); }
+
+    /* Timeline */
+    .timeline-item { position: relative; padding: 0 0 20px 24px; }
+    .timeline-item::before {
+      content: '';
+      position: absolute; left: 0; top: 6px;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--mauve);
+      box-shadow: 0 0 0 2px var(--surface0);
+    }
+    .timeline-item::after {
+      content: '';
+      position: absolute; left: 3px; top: 18px;
+      width: 1px; height: calc(100% - 16px);
+      background: var(--surface1);
+    }
+    .timeline-item:last-child::after { display: none; }
+    .tl-role { color: var(--blue); font-weight: 700; font-size: 14px; }
+    .tl-place { color: var(--peach); font-size: 12px; }
+    .tl-date  { color: var(--overlay0); font-size: 11px; margin-bottom: 6px; }
+    .tl-desc  { color: var(--subtext0); font-size: 12.5px; }
+
+    /* Doc nav */
+    .doc-nav { display: flex; flex-direction: column; gap: 4px; margin-bottom: 24px; }
+    .doc-link {
+      color: var(--overlay1); font-size: 12.5px; cursor: pointer;
+      padding: 3px 0;
+      transition: color 0.1s;
+    }
+    .doc-link::before { content: "→ "; color: var(--overlay0); }
+    .doc-link:hover { color: var(--blue); }
+
+    /* Cursor blink */
+    .cursor {
+      display: inline-block;
+      width: 8px; height: 15px;
+      background: var(--mauve);
+      vertical-align: text-bottom;
+      animation: blink 1.1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── Status line ── */
+    #statusbar {
+      background: var(--mauve);
+      color: var(--crust);
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .sl-mode {
+      background: var(--blue);
+      color: var(--crust);
+      padding: 0 12px;
+      font-weight: 800;
+      height: 100%;
+      display: flex; align-items: center;
+    }
+    .sl-file { padding: 0 12px; font-weight: 600; }
+    .sl-spacer { flex: 1; }
+    .sl-right { display: flex; align-items: center; height: 100%; }
+    .sl-branch {
+      background: var(--surface0);
+      color: var(--mauve);
+      padding: 0 10px;
+      height: 100%;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .sl-pos {
+      background: var(--blue);
+      color: var(--crust);
+      padding: 0 10px;
+      height: 100%;
+      display: flex; align-items: center;
+      font-weight: 700;
+    }
+    .sl-pct { padding: 0 10px; }
+
+    /* ── Command line (bottom) ── */
+    #cmdline {
+      background: var(--crust);
+      color: var(--text);
+      height: 22px;
+      display: flex; align-items: center;
+      padding: 0 8px;
+      font-size: 12px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--surface0);
+    }
+    #cmdline .cmd-text { color: var(--overlay1); }
+
+    /* Responsive tweaks */
+    @media (max-width: 700px) {
+      #filetree { width: 160px; }
+      #content { padding: 12px 16px 40px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Buffer tab bar -->
+<div id="tabbar">
+  <div class="tab active" onclick="switchPage('home', this)" data-page="home">
+    <span class="icon">󰙝</span> about.md
+  </div>
+  <div class="tab" onclick="switchPage('blog', this)" data-page="blog">
+    <span class="icon"></span> blog/
+  </div>
+  <div class="tab" onclick="switchPage('docs', this)" data-page="docs">
+    <span class="icon">󰈙</span> docs/
+  </div>
+  <div class="tab" onclick="switchPage('cv', this)" data-page="cv">
+    <span class="icon"></span> cv.md
+  </div>
+  <div class="tab" onclick="switchPage('contact', this)" data-page="contact">
+    <span class="icon">󰇮</span> contact.md
+  </div>
+</div>
+
+<div id="workspace">
+  <!-- NvimTree file explorer -->
+  <div id="filetree">
+    <div class="tree-header">nvim-tree</div>
+    <div class="tree-item dir" onclick="switchPageByKey('home')">📁 ~/yourname</div>
+    <div class="tree-item active" id="ft-home" onclick="switchPageByKey('home')">
+      <span class="ti">󰙝</span> about.md
+    </div>
+    <div class="tree-item dir" onclick="switchPageByKey('blog')">📁 blog/</div>
+    <div class="tree-item" id="ft-blog" onclick="switchPageByKey('blog')">
+      <span class="ti"></span> index.md
+    </div>
+    <div class="tree-item dir" onclick="switchPageByKey('docs')">📁 docs/</div>
+    <div class="tree-item" id="ft-docs" onclick="switchPageByKey('docs')">
+      <span class="ti">󰈙</span> readme.md
+    </div>
+    <div class="tree-item dir" onclick="switchPageByKey('cv')">📁 career/</div>
+    <div class="tree-item" id="ft-cv" onclick="switchPageByKey('cv')">
+      <span class="ti"></span> cv.md
+    </div>
+    <div class="tree-item" id="ft-contact" onclick="switchPageByKey('contact')">
+      <span class="ti">󰇮</span> contact.md
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div id="editor">
+    <div id="linenums" id="linenums"></div>
+
+    <div id="content">
+
+      <!-- ═══ HOME / ABOUT ═══ -->
+      <div class="page active" id="page-home">
+        <div class="h1">yourname</div>
+        <div class="meta">
+          <span>bioinformatician</span> · <span>open source</span> · <span>vim enthusiast</span> &nbsp;·&nbsp; 🌍 Germany
+        </div>
+
+        <div class="callout info">
+          <div class="cl-label">ℹ️  INFO</div>
+          MSc Bioinformatics — actively looking for new opportunities in computational biology, genomics, and data-driven research.
+        </div>
+
+        <div class="h2">who am i</div>
+        <p>
+          Hey, welcome to my corner of the internet. I'm a bioinformatician passionate about turning
+          raw sequencing data into biological insight. I spend most of my time writing pipelines,
+          wrangling genomic datasets, and tweaking my Neovim config when I should be writing papers.
+        </p>
+        <p>
+          I believe in reproducible science, elegant code, and the terminal as a way of life.
+        </p>
+
+        <div class="h2">what i work with</div>
+
+        <div class="h3">languages</div>
+        <div class="skill-row">
+          <span class="skill-chip hl">Python</span>
+          <span class="skill-chip hl">R</span>
+          <span class="skill-chip hl">Bash</span>
+          <span class="skill-chip">Rust</span>
+          <span class="skill-chip">Lua</span>
+          <span class="skill-chip">Nextflow</span>
+          <span class="skill-chip">Snakemake</span>
+        </div>
+
+        <div class="h3">bioinformatics</div>
+        <div class="skill-row">
+          <span class="skill-chip hl">RNA-seq</span>
+          <span class="skill-chip hl">scRNA-seq</span>
+          <span class="skill-chip hl">Variant Calling</span>
+          <span class="skill-chip">ATAC-seq</span>
+          <span class="skill-chip">Proteomics</span>
+          <span class="skill-chip">Phylogenetics</span>
+        </div>
+
+        <div class="h3">tools &amp; stack</div>
+        <div class="skill-row">
+          <span class="skill-chip hl">Neovim</span>
+          <span class="skill-chip hl">Nix / NixOS</span>
+          <span class="skill-chip hl">Docker</span>
+          <span class="skill-chip">Singularity</span>
+          <span class="skill-chip">Git</span>
+          <span class="skill-chip">tmux</span>
+          <span class="skill-chip">SLURM</span>
+        </div>
+
+        <div class="code-block"><span class="cm"># spawn a quick bioinformatics env</span>
+<span class="kw">nix</span> <span class="fn">shell</span> nixpkgs#<span class="tp">bwa</span> nixpkgs#<span class="tp">samtools</span> nixpkgs#<span class="tp">bcftools</span>
+<span class="cm"># now you're set  :)</span></div>
+
+        <div class="h2">currently</div>
+        <p>
+          🔬 Finishing my MSc thesis on single-cell multiomics integration<br>
+          📖 Learning Rust to write faster bioinformatics tooling<br>
+          ⚙️  Migrating my dotfiles to a fully reproducible Nix flake<br>
+          👀 Open to positions in computational biology &amp; genomics
+        </p>
+      </div>
+
+      <!-- ═══ BLOG ═══ -->
+      <div class="page" id="page-blog">
+        <div class="h1">blog</div>
+        <div class="meta">thoughts on bioinformatics, linux, and building stuff</div>
+
+        <div class="blog-card" onclick="openPost('post1')">
+          <div class="bc-title">Building a reproducible RNA-seq pipeline with Nextflow + Nix</div>
+          <div class="bc-meta">2025-11-03 &nbsp;·&nbsp; 8 min read &nbsp;·&nbsp;
+            <span class="tag">nextflow</span><span class="tag">nix</span><span class="tag">rna-seq</span>
+          </div>
+          <div class="bc-desc">
+            How I stopped fighting with conda environments and started shipping fully reproducible
+            pipelines that run identically on my laptop, HPC, and CI.
+          </div>
+        </div>
+
+        <div class="blog-card" onclick="openPost('post2')">
+          <div class="bc-title">Neovim for bioinformatics: my 2025 config walkthrough</div>
+          <div class="bc-meta">2025-09-18 &nbsp;·&nbsp; 12 min read &nbsp;·&nbsp;
+            <span class="tag">neovim</span><span class="tag">lua</span><span class="tag">productivity</span>
+          </div>
+          <div class="bc-desc">
+            LSP for Python &amp; R, snakemake syntax, remote editing over SSH, and every plugin I
+            actually kept after six months of ruthless pruning.
+          </div>
+        </div>
+
+        <div class="blog-card" onclick="openPost('post3')">
+          <div class="bc-title">scRNA-seq from scratch: a practical Seurat → scVI migration guide</div>
+          <div class="bc-meta">2025-07-02 &nbsp;·&nbsp; 15 min read &nbsp;·&nbsp;
+            <span class="tag">scRNA-seq</span><span class="tag">python</span><span class="tag">deep-learning</span>
+          </div>
+          <div class="bc-desc">
+            When Seurat clustering stopped scaling to 500k cells I switched to scVI. Here's
+            everything I wish someone had written down.
+          </div>
+        </div>
+
+        <div class="blog-card" onclick="openPost('post4')">
+          <div class="bc-title">Understanding p-value inflation in GWAS: a simulation approach</div>
+          <div class="bc-meta">2025-04-11 &nbsp;·&nbsp; 10 min read &nbsp;·&nbsp;
+            <span class="tag">statistics</span><span class="tag">GWAS</span><span class="tag">R</span>
+          </div>
+          <div class="bc-desc">
+            Using simulations to build intuition for why genomic inflation happens and how to
+            detect it early in your study design.
+          </div>
+        </div>
+
+        <!-- Expanded post view -->
+        <div id="post-view" style="display:none">
+          <div style="margin-bottom:16px">
+            <span style="color:var(--overlay0);cursor:pointer;font-size:12px" onclick="closePost()">← back to blog</span>
+          </div>
+          <div id="post-content"></div>
+        </div>
+      </div>
+
+      <!-- ═══ DOCS ═══ -->
+      <div class="page" id="page-docs">
+        <div class="h1">docs</div>
+        <div class="meta">technical notes, cheatsheets &amp; references</div>
+
+        <div class="doc-nav">
+          <span class="doc-link" onclick="showDoc('snakemake')">Snakemake cheatsheet</span>
+          <span class="doc-link" onclick="showDoc('samtools')">samtools one-liners</span>
+          <span class="doc-link" onclick="showDoc('r-bioc')">Bioconductor quick reference</span>
+          <span class="doc-link" onclick="showDoc('vim-bio')">Neovim for bioinformatics</span>
+        </div>
+
+        <div id="doc-content">
+          <!-- default doc -->
+          <div class="h2">snakemake cheatsheet</div>
+
+          <div class="h3">minimal rule</div>
+          <div class="code-block"><span class="kw">rule</span> <span class="fn">align_reads</span>:
+    <span class="tp">input</span>:
+        r1 = <span class="str">"data/{sample}_R1.fastq.gz"</span>,
+        r2 = <span class="str">"data/{sample}_R2.fastq.gz"</span>,
+        ref = <span class="str">"ref/genome.fa"</span>
+    <span class="tp">output</span>:
+        bam = <span class="str">"results/{sample}.bam"</span>
+    <span class="tp">threads</span>: <span class="num">8</span>
+    <span class="tp">shell</span>:
+        <span class="str">"""
+        bwa mem -t {threads} {input.ref} {input.r1} {input.r2} \
+          | samtools sort -o {output.bam}
+        samtools index {output.bam}
+        """</span></div>
+
+          <div class="h3">dry run &amp; useful flags</div>
+          <div class="code-block"><span class="cm"># dry run — see what would execute</span>
+snakemake <span class="op">-n</span> <span class="op">--forceall</span>
+
+<span class="cm"># run on SLURM cluster</span>
+snakemake <span class="op">--executor</span> slurm <span class="op">--jobs</span> <span class="num">50</span> \
+  <span class="op">--default-resources</span> slurm_partition=<span class="str">"compute"</span> mem_mb=<span class="num">8000</span>
+
+<span class="cm"># generate rulegraph</span>
+snakemake <span class="op">--rulegraph</span> | dot <span class="op">-Tpng</span> <span class="op">-o</span> dag.png</div>
+
+          <div class="callout tip">
+            <div class="cl-label">💡 TIP</div>
+            Always use <code style="color:var(--peach)">--sdm conda</code> or a Nix shell to pin
+            all tool versions. Reproducibility is non-negotiable in bioinformatics.
+          </div>
+
+          <div class="h3">checkpoint (scatter-gather)</div>
+          <div class="code-block"><span class="kw">checkpoint</span> <span class="fn">split_chromosomes</span>:
+    <span class="tp">input</span>: <span class="str">"data/variants.vcf.gz"</span>
+    <span class="tp">output</span>: directory(<span class="str">"split/"</span>)
+    <span class="tp">shell</span>: <span class="str">"bcftools view {input} | split_by_chrom.sh {output}"</span>
+
+<span class="kw">def</span> <span class="fn">gather_inputs</span>(wildcards):
+    checkpoint_output = checkpoints.split_chromosomes.get().output[<span class="num">0</span>]
+    <span class="kw">return</span> expand(<span class="str">"split/{chrom}.vcf"</span>,
+                   chrom=glob_wildcards(os.path.join(checkpoint_output, <span class="str">"{chrom}.vcf"</span>)).chrom)</div>
+        </div>
+      </div>
+
+      <!-- ═══ CV ═══ -->
+      <div class="page" id="page-cv">
+        <div class="h1">curriculum vitae</div>
+        <div class="meta">last updated <span>2025-11</span> &nbsp;·&nbsp; <a href="#">download pdf</a></div>
+
+        <div class="h2">education</div>
+        <div class="timeline-item">
+          <div class="tl-role">MSc Bioinformatics</div>
+          <div class="tl-place">University Name, Germany</div>
+          <div class="tl-date">2023 — 2025 (expected)</div>
+          <div class="tl-desc">
+            Thesis: "Multi-modal single-cell data integration for cell type deconvolution in bulk RNA-seq."
+            Specialisation in statistical genomics and machine learning.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-role">BSc Bioinformatics / Molecular Biology</div>
+          <div class="tl-place">University Name, Germany</div>
+          <div class="tl-date">2020 — 2023</div>
+          <div class="tl-desc">
+            Graduated with distinction. Final project on phylogenetic reconstruction from metagenomic data.
+          </div>
+        </div>
+
+        <div class="h2">experience</div>
+        <div class="timeline-item">
+          <div class="tl-role">Research Intern — Computational Genomics</div>
+          <div class="tl-place">Institute / Company Name</div>
+          <div class="tl-date">Jun 2024 — Sep 2024</div>
+          <div class="tl-desc">
+            Built end-to-end ATAC-seq + RNA-seq co-analysis pipeline in Nextflow. Reduced runtime by
+            40 % via parallelisation on SLURM cluster. Developed QC dashboard in R Shiny.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-role">Student Researcher — Structural Bioinformatics</div>
+          <div class="tl-place">Lab Name, University</div>
+          <div class="tl-date">Oct 2022 — Feb 2023</div>
+          <div class="tl-desc">
+            Automated protein structure comparison with BioPython. Maintained lab GitHub and introduced
+            reproducible workflow standards.
+          </div>
+        </div>
+
+        <div class="h2">publications &amp; talks</div>
+        <p>
+          <span class="tag">poster</span> "Integrating ATAC-seq and RNA-seq for regulatory network inference" —
+          ECCB 2024, Stockholm
+        </p>
+        <p>
+          <span class="tag">preprint</span> Your Name et al. (2025). <em>bioRxiv</em>.
+          <a href="#">doi:10.1101/xxx</a>
+        </p>
+
+        <div class="h2">open source</div>
+        <p>
+          <a href="#">github.com/yourhandle</a> — contributions to scanpy, Bioconductor packages,
+          and personal tooling. Stars: ★ 120+
+        </p>
+
+        <div class="callout info">
+          <div class="cl-label">📬 OPEN TO WORK</div>
+          Seeking roles in computational biology, genomics engineering, or research software.
+          Remote-friendly and open to relocation within the EU.
+        </div>
+      </div>
+
+      <!-- ═══ CONTACT ═══ -->
+      <div class="page" id="page-contact">
+        <div class="h1">contact</div>
+        <div class="meta">let's talk science, code, or vim configs</div>
+
+        <div class="code-block"><span class="cm"># find me at</span>
+
+email    = <span class="str">"you@example.com"</span>
+github   = <span class="str">"github.com/yourhandle"</span>
+linkedin = <span class="str">"linkedin.com/in/yourname"</span>
+mastodon = <span class="str">"@you@fosstodon.org"</span>
+matrix   = <span class="str">"@you:matrix.org"</span></div>
+
+        <div class="h2">preferred contact</div>
+        <p>
+          Email is best for job inquiries, collaboration ideas, or anything serious.
+          GitHub Issues for bug reports on any of my projects.
+          Mastodon for casual bio/tech chatter.
+        </p>
+
+        <div class="callout tip">
+          <div class="cl-label">🔑 PGP</div>
+          My public key is available at <a href="#">keys.openpgp.org</a> — fingerprint
+          <code style="color:var(--peach)">ABCD EFGH 1234 5678</code>
+        </div>
+
+        <div class="h2">availability</div>
+        <div class="code-block"><span class="kw">status</span>     = <span class="str">"actively job-seeking"</span>
+<span class="kw">response</span>   = <span class="str">"within 48 h"</span>
+<span class="kw">timezone</span>   = <span class="str">"Europe/Berlin (CET)"</span>
+<span class="kw">start_date</span> = <span class="str">"Q1 2026"</span></div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /editor -->
+</div><!-- /workspace -->
+
+<!-- Statusline -->
+<div id="statusbar">
+  <div class="sl-mode" id="sl-mode">NORMAL</div>
+  <div class="sl-file" id="sl-file">about.md</div>
+  <div class="sl-spacer"></div>
+  <div class="sl-right">
+    <div class="sl-branch">⎇  main</div>
+    <div class="sl-pos" id="sl-pos">1:1</div>
+    <div class="sl-pct" id="sl-pct">Top</div>
+  </div>
+</div>
+
+<!-- Command / message line -->
+<div id="cmdline">
+  <span class="cmd-text" id="cmdtext">-- INSERT your content here --</span>
+</div>
+
+<script>
+  const pages = ['home','blog','docs','cv','contact'];
+  const fileNames = {
+    home: 'about.md',
+    blog: 'blog/index.md',
+    docs: 'docs/readme.md',
+    cv:   'career/cv.md',
+    contact: 'contact.md'
+  };
+  const docNames = {
+    home: 'about.md',
+    blog: 'blog/',
+    docs: 'docs/',
+    cv: 'cv.md',
+    contact: 'contact.md'
+  };
+
+  let currentPage = 'home';
+
+  function switchPage(key, tabEl) {
+    pages.forEach(p => {
+      document.getElementById('page-' + p).classList.remove('active');
+      document.getElementById('ft-' + p).classList.remove('active');
+    });
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+    document.getElementById('page-' + key).classList.add('active');
+    document.getElementById('ft-' + key).classList.add('active');
+    if (tabEl) tabEl.classList.add('active');
+
+    document.getElementById('sl-file').textContent = fileNames[key];
+    document.getElementById('cmdtext').textContent = ':e ' + fileNames[key];
+    currentPage = key;
+    updateLineNums();
+    // reset post view when leaving blog
+    if (key !== 'blog') {
+      document.querySelectorAll('.blog-card').forEach(c => c.style.display = '');
+      document.getElementById('post-view').style.display = 'none';
+    }
+    updateStatus();
+  }
+
+  function switchPageByKey(key) {
+    const tab = document.querySelector('[data-page="' + key + '"]');
+    switchPage(key, tab);
+  }
+
+  // Blog post expand
+  const posts = {
+    post1: `
+      <div class="h1">Building a reproducible RNA-seq pipeline with Nextflow + Nix</div>
+      <div class="meta">2025-11-03 &nbsp;·&nbsp; 8 min &nbsp;·&nbsp; <span class="tag">nextflow</span><span class="tag">nix</span></div>
+      <div class="h2">the problem</div>
+      <p>Every time I handed off a pipeline, it broke. Conda environments drifted, tool versions mismatched, and "works on my machine" became the lab motto. I needed a real solution.</p>
+      <div class="h2">enter nix</div>
+      <p>Nix pins every dependency — down to glibc — in a content-addressed store. Pair it with a <code style="color:var(--peach)">flake.nix</code> and your environment is bit-for-bit reproducible across machines.</p>
+      <div class="code-block"><span class="kw">{</span>
+  inputs.nixpkgs.url = <span class="str">"github:NixOS/nixpkgs/nixos-24.11"</span>;
+  outputs = <span class="kw">{</span> nixpkgs, ... <span class="kw">}</span>: <span class="kw">{</span>
+    devShells.x86_64-linux.default = nixpkgs.legacyPackages.x86_64-linux.mkShell <span class="kw">{</span>
+      packages = <span class="kw">with</span> nixpkgs.legacyPackages.x86_64-linux; [
+        nextflow star salmon samtools fastp multiqc
+      ];
+    <span class="kw">}</span>;
+  <span class="kw">}</span>;
+<span class="kw">}</span></div>
+      <p>Run <code style="color:var(--peach)">nix develop</code> and you drop into a shell with all tools pinned. No internet needed after the first pull. Works on HPC without root.</p>
+      <div class="callout tip"><div class="cl-label">💡 TIP</div>Cache your Nix store on <a href="#">cachix.org</a> so CI doesn't rebuild from source every time.</div>`,
+    post2: `
+      <div class="h1">Neovim for bioinformatics: my 2025 config walkthrough</div>
+      <div class="meta">2025-09-18 &nbsp;·&nbsp; 12 min &nbsp;·&nbsp; <span class="tag">neovim</span><span class="tag">lua</span></div>
+      <div class="h2">why neovim</div>
+      <p>SSH sessions, HPC clusters, tmux panes — the terminal is where bioinformatics happens. A fast, keyboard-driven editor that runs anywhere is not optional, it's essential.</p>
+      <div class="h2">key plugins for bio work</div>
+      <div class="code-block"><span class="cm">-- init.lua excerpt</span>
+<span class="kw">return</span> require(<span class="str">"lazy"</span>).setup(<span class="kw">{</span>
+  <span class="cm">-- LSP for Python (pyright) and R (r-languageserver)</span>
+  <span class="str">"neovim/nvim-lspconfig"</span>,
+  <span class="str">"stevearc/conform.nvim"</span>,   <span class="cm">-- format on save</span>
+  <span class="str">"jpalardy/vim-slime"</span>,       <span class="cm">-- REPL integration (R, Python)</span>
+  <span class="str">"snakemake/snakemake"</span>,      <span class="cm">-- Snakemake syntax</span>
+  <span class="str">"nvim-telescope/telescope.nvim"</span>, <span class="cm">-- fuzzy find across projects</span>
+<span class="kw">})</span></div>
+      <div class="h2">remote editing over SSH</div>
+      <p>Use <code style="color:var(--peach)">:h vim.lsp</code> + <code style="color:var(--peach)">sshfs</code> to mount remote directories locally, giving you full LSP support on HPC filesystems without copying files back and forth.</p>`,
+    post3: `
+      <div class="h1">scRNA-seq: Seurat → scVI migration guide</div>
+      <div class="meta">2025-07-02 &nbsp;·&nbsp; 15 min &nbsp;·&nbsp; <span class="tag">scRNA-seq</span><span class="tag">python</span></div>
+      <div class="h2">why move to scVI</div>
+      <p>Seurat is wonderful until your atlas grows past ~200k cells. Variational autoencoders scale better, handle batch effects more elegantly, and integrate naturally with multi-modal data.</p>
+      <div class="code-block"><span class="kw">import</span> scvi, anndata, scanpy <span class="kw">as</span> sc
+
+adata = anndata.read_h5ad(<span class="str">"atlas.h5ad"</span>)
+sc.pp.filter_cells(adata, min_genes=<span class="num">200</span>)
+sc.pp.normalize_total(adata)
+sc.pp.log1p(adata)
+
+scvi.model.SCVI.setup_anndata(adata, batch_key=<span class="str">"sample"</span>)
+model = scvi.model.SCVI(adata, n_layers=<span class="num">2</span>, n_latent=<span class="num">30</span>)
+model.train(max_epochs=<span class="num">200</span>)
+
+adata.obsm[<span class="str">"X_scVI"</span>] = model.get_latent_representation()</div>`,
+    post4: `
+      <div class="h1">Understanding p-value inflation in GWAS</div>
+      <div class="meta">2025-04-11 &nbsp;·&nbsp; 10 min &nbsp;·&nbsp; <span class="tag">GWAS</span><span class="tag">statistics</span><span class="tag">R</span></div>
+      <div class="h2">what is genomic inflation</div>
+      <p>When the observed distribution of GWAS p-values deviates from the expected uniform distribution under the null, we call it inflation. The genomic inflation factor λ quantifies this.</p>
+      <div class="code-block"><span class="cm"># R: compute lambda from a GWAS result</span>
+lambda_gc = <span class="kw">function</span>(pvals) <span class="kw">{</span>
+  chisq = qchisq(<span class="num">1</span> - pvals, df = <span class="num">1</span>)
+  median(chisq) / qchisq(<span class="num">0.5</span>, df = <span class="num">1</span>)
+<span class="kw">}</span>
+lambda_gc(gwas_results$P)  <span class="cm"># ideally close to 1.0</span></div>
+      <div class="callout warn"><div class="cl-label">⚠️  WARNING</div>λ &gt; 1.05 in a well-powered GWAS often signals population stratification. Always include principal components as covariates.</div>
+      <p>I'll walk through a simulation in R showing how uncorrected stratification inflates your test statistics, and how including PCs fixes it.</p>`
+  };
+
+  function openPost(id) {
+    document.querySelectorAll('.blog-card').forEach(c => c.style.display = 'none');
+    const pv = document.getElementById('post-view');
+    document.getElementById('post-content').innerHTML = posts[id];
+    pv.style.display = 'block';
+    updateLineNums();
+  }
+  function closePost() {
+    document.querySelectorAll('.blog-card').forEach(c => c.style.display = '');
+    document.getElementById('post-view').style.display = 'none';
+    updateLineNums();
+  }
+
+  // Docs section
+  const docs = {
+    snakemake: document.getElementById('doc-content').innerHTML,
+    samtools: `<div class="h2">samtools one-liners</div>
+      <div class="h3">index &amp; quick stats</div>
+      <div class="code-block"><span class="cm"># index bam</span>
+samtools index sample.bam
+<span class="cm"># mapping stats</span>
+samtools flagstat sample.bam
+<span class="cm"># coverage depth at every position</span>
+samtools depth <span class="op">-a</span> sample.bam > depth.tsv</div>
+      <div class="h3">extract reads by region</div>
+      <div class="code-block">samtools view <span class="op">-b</span> sample.bam <span class="str">chr1:1000000-2000000</span> > region.bam
+samtools view <span class="op">-f</span> <span class="num">0x2</span> <span class="op">-q</span> <span class="num">30</span> sample.bam <span class="cm"># properly paired, MAPQ≥30</span></div>
+      <div class="callout tip"><div class="cl-label">💡 TIP</div>Pipe directly from bwa or STAR — never write an unsorted BAM to disk.</div>`,
+    'r-bioc': `<div class="h2">Bioconductor quick reference</div>
+      <div class="h3">DESeq2 minimal workflow</div>
+      <div class="code-block"><span class="kw">library</span>(DESeq2)
+dds = DESeqDataSetFromMatrix(countData = counts,
+                              colData   = metadata,
+                              design    = ~ condition)
+dds = DESeq(dds)
+res = results(dds, contrast = c(<span class="str">"condition"</span>,<span class="str">"treat"</span>,<span class="str">"ctrl"</span>))
+res[order(res$padj),] |> head(<span class="num">20</span>)</div>
+      <div class="h3">GenomicRanges operations</div>
+      <div class="code-block">gr1 = GRanges(<span class="str">"chr1"</span>, IRanges(<span class="num">1000</span>, <span class="num">2000</span>))
+gr2 = GRanges(<span class="str">"chr1"</span>, IRanges(<span class="num">1500</span>, <span class="num">3000</span>))
+findOverlaps(gr1, gr2)
+subsetByOverlaps(peaks, genes, maxgap=<span class="num">500</span>)</div>`,
+    'vim-bio': `<div class="h2">Neovim for bioinformatics</div>
+      <div class="h3">useful keymaps</div>
+      <div class="code-block"><span class="cm">-- send selection to REPL (vim-slime)</span>
+vim.keymap.set(<span class="str">"v"</span>, <span class="str">"&lt;C-c&gt;&lt;C-c&gt;"</span>, <span class="str">"&lt;Plug&gt;SlimeRegionSend"</span>)
+<span class="cm">-- open terminal in split</span>
+vim.keymap.set(<span class="str">"n"</span>, <span class="str">"&lt;leader&gt;tt"</span>, <span class="str">":split | term&lt;CR&gt;"</span>)
+<span class="cm">-- run current snakemake file dry-run</span>
+vim.keymap.set(<span class="str">"n"</span>, <span class="str">"&lt;leader&gt;sn"</span>,
+  <span class="str">":!snakemake -n -s %&lt;CR&gt;"</span>)</div>
+      <div class="callout info"><div class="cl-label">ℹ️  LSP setup</div>Install <code style="color:var(--peach)">pyright</code> via npm and <code style="color:var(--peach)">r-languageserver</code> inside R for full autocomplete in both languages.</div>`
+  };
+
+  function showDoc(key) {
+    document.getElementById('doc-content').innerHTML = docs[key];
+    updateLineNums();
+  }
+
+  // Line numbers
+  function updateLineNums() {
+    const content = document.getElementById('content');
+    const lh = 22; // approx line height px
+    const lines = Math.max(40, Math.ceil(content.scrollHeight / lh));
+    const ln = document.getElementById('linenums');
+    let html = '';
+    for (let i = 1; i <= lines; i++) {
+      html += i + '<br>';
+    }
+    ln.innerHTML = html;
+  }
+
+  // Statusline row/col update
+  function updateStatus() {
+    const content = document.getElementById('content');
+    const pct = content.scrollTop / (content.scrollHeight - content.clientHeight);
+    const total = Math.ceil(content.scrollHeight / 22);
+    const row = Math.floor(content.scrollTop / 22) + 1;
+    document.getElementById('sl-pos').textContent = row + ':1';
+    const p = isNaN(pct) ? 'Top' : Math.round(pct * 100) + '%';
+    document.getElementById('sl-pct').textContent = p === '0%' ? 'Top' : p === '100%' ? 'Bot' : p;
+  }
+
+  document.getElementById('content').addEventListener('scroll', updateStatus);
+
+  // Keyboard navigation (vim-like)
+  document.addEventListener('keydown', e => {
+    const idx = pages.indexOf(currentPage);
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const next = pages[(idx + (e.shiftKey ? -1 + pages.length : 1)) % pages.length];
+      switchPageByKey(next);
+    }
+    if (e.key === 'g' && e.ctrlKey) {
+      document.getElementById('sl-mode').textContent = 'VISUAL';
+      setTimeout(() => document.getElementById('sl-mode').textContent = 'NORMAL', 600);
+    }
+  });
+
+  // Init
+  updateLineNums();
+  updateStatus();
+  document.getElementById('content').addEventListener('scroll', updateLineNums);
+</script>
+</body>
+</html>
