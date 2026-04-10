@@ -122,6 +122,38 @@
     .tree-item.dir:hover { color: var(--sapphire); }
     .tree-item .ti { font-size: 12px; }
 
+    /* Collapsible folders */
+    .tree-folder { user-select: none; }
+    .tree-folder > .tree-item.dir { position: relative; }
+    .tree-folder > .tree-item.dir::before {
+      content: "▶";
+      position: absolute;
+      left: 2px;
+      font-size: 8px;
+      color: var(--overlay0);
+      transition: transform 0.15s;
+    }
+    .tree-folder.open > .tree-item.dir::before {
+      transform: rotate(90deg);
+    }
+    .tree-children {
+      display: none;
+      overflow: hidden;
+    }
+    .tree-folder.open > .tree-children {
+      display: block;
+    }
+    /* Indentation levels */
+    .tree-children .tree-item { padding-left: 28px; }
+    .tree-children .tree-folder > .tree-item.dir { padding-left: 20px; }
+    .tree-children .tree-folder > .tree-item.dir::before { left: 10px; }
+    .tree-children .tree-children .tree-item { padding-left: 36px; }
+    .tree-children .tree-children .tree-folder > .tree-item.dir { padding-left: 28px; }
+    .tree-children .tree-children .tree-folder > .tree-item.dir::before { left: 18px; }
+    .tree-children .tree-children .tree-children .tree-item { padding-left: 44px; }
+    .tree-children .tree-children .tree-children .tree-folder > .tree-item.dir { padding-left: 36px; }
+    .tree-children .tree-children .tree-children .tree-folder > .tree-item.dir::before { left: 26px; }
+
     /* ── Editor area ── */
     #editor {
       flex: 1;
@@ -361,19 +393,19 @@
 <!-- Buffer tab bar -->
 <div id="tabbar">
   <div class="tab active" onclick="switchPage('home', this)" data-page="home">
-    <span class="icon">󰙝</span> about.md
+    <span class="icon">📄</span> about.md
   </div>
   <div class="tab" onclick="switchPage('blog', this)" data-page="blog">
-    <span class="icon"></span> blog/
+    <span class="icon">📁</span> blog/
   </div>
   <div class="tab" onclick="switchPage('docs', this)" data-page="docs">
-    <span class="icon">󰈙</span> docs/
+    <span class="icon">📁</span> docs/
   </div>
   <div class="tab" onclick="switchPage('cv', this)" data-page="cv">
-    <span class="icon"></span> cv.md
+    <span class="icon">📄</span> cv.md
   </div>
   <div class="tab" onclick="switchPage('contact', this)" data-page="contact">
-    <span class="icon">󰇮</span> contact.md
+    <span class="icon">✉️</span> contact.md
   </div>
 </div>
 
@@ -381,24 +413,93 @@
   <!-- NvimTree file explorer -->
   <div id="filetree">
     <div class="tree-header">nvim-tree</div>
-    <div class="tree-item dir" onclick="switchPageByKey('home')">📁 ~/yourname</div>
-    <div class="tree-item active" id="ft-home" onclick="switchPageByKey('home')">
-      <span class="ti">󰙝</span> about.md
-    </div>
-    <div class="tree-item dir" onclick="switchPageByKey('blog')">📁 blog/</div>
-    <div class="tree-item" id="ft-blog" onclick="switchPageByKey('blog')">
-      <span class="ti"></span> index.md
-    </div>
-    <div class="tree-item dir" onclick="switchPageByKey('docs')">📁 docs/</div>
-    <div class="tree-item" id="ft-docs" onclick="switchPageByKey('docs')">
-      <span class="ti">󰈙</span> readme.md
-    </div>
-    <div class="tree-item dir" onclick="switchPageByKey('cv')">📁 career/</div>
-    <div class="tree-item" id="ft-cv" onclick="switchPageByKey('cv')">
-      <span class="ti"></span> cv.md
-    </div>
-    <div class="tree-item" id="ft-contact" onclick="switchPageByKey('contact')">
-      <span class="ti">󰇮</span> contact.md
+
+    <!-- Root folder -->
+    <div class="tree-folder open">
+      <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 ~/yourname</div>
+      <div class="tree-children">
+
+        <div class="tree-item active" id="ft-home" onclick="switchPageByKey('home')">
+          <span class="ti">📄</span> about.md
+        </div>
+
+        <div class="tree-item" id="ft-contact" onclick="switchPageByKey('contact')">
+          <span class="ti">✉️</span> contact.md
+        </div>
+
+        <!-- blog/ folder -->
+        <div class="tree-folder">
+          <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 blog/</div>
+          <div class="tree-children">
+            <div class="tree-item" id="ft-blog" onclick="switchPageByKey('blog')">
+              <span class="ti">📄</span> index.md
+            </div>
+            <!-- blog/posts/ subfolder -->
+            <div class="tree-folder">
+              <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 posts/</div>
+              <div class="tree-children">
+                <div class="tree-item" onclick="switchPageByKey('blog'); openPost('post1')">
+                  <span class="ti">📄</span> nextflow-nix.md
+                </div>
+                <div class="tree-item" onclick="switchPageByKey('blog'); openPost('post2')">
+                  <span class="ti">📄</span> neovim-config.md
+                </div>
+                <div class="tree-item" onclick="switchPageByKey('blog'); openPost('post3')">
+                  <span class="ti">📄</span> scrna-seq-scvi.md
+                </div>
+                <div class="tree-item" onclick="switchPageByKey('blog'); openPost('post4')">
+                  <span class="ti">📄</span> gwas-pvalue.md
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- docs/ folder -->
+        <div class="tree-folder">
+          <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 docs/</div>
+          <div class="tree-children">
+            <div class="tree-item" id="ft-docs" onclick="switchPageByKey('docs')">
+              <span class="ti">📄</span> readme.md
+            </div>
+            <!-- docs/cheatsheets/ subfolder -->
+            <div class="tree-folder">
+              <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 cheatsheets/</div>
+              <div class="tree-children">
+                <div class="tree-item" onclick="switchPageByKey('docs'); showDoc('snakemake')">
+                  <span class="ti">📄</span> snakemake.md
+                </div>
+                <div class="tree-item" onclick="switchPageByKey('docs'); showDoc('samtools')">
+                  <span class="ti">📄</span> samtools.md
+                </div>
+                <div class="tree-item" onclick="switchPageByKey('docs'); showDoc('r-bioc')">
+                  <span class="ti">📄</span> bioconductor.md
+                </div>
+              </div>
+            </div>
+            <!-- docs/guides/ subfolder -->
+            <div class="tree-folder">
+              <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 guides/</div>
+              <div class="tree-children">
+                <div class="tree-item" onclick="switchPageByKey('docs'); showDoc('vim-bio')">
+                  <span class="ti">📄</span> neovim-bio.md
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- career/ folder -->
+        <div class="tree-folder">
+          <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 career/</div>
+          <div class="tree-children">
+            <div class="tree-item" id="ft-cv" onclick="switchPageByKey('cv')">
+              <span class="ti">📄</span> cv.md
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -719,6 +820,11 @@ matrix   = <span class="str">"@you:matrix.org"</span></div>
 </div>
 
 <script>
+  // Toggle folder open/closed
+  function toggleFolder(folderEl) {
+    folderEl.classList.toggle('open');
+  }
+
   const pages = ['home','blog','docs','cv','contact'];
   const fileNames = {
     home: 'about.md',
