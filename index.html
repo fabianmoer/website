@@ -7,8 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
   <style>
+/* ════════════════════════════════════════════════════════════════════════════
+   THEME COLORS - Edit these to change the color scheme
+   Currently using: Catppuccin Mocha palette
+   ════════════════════════════════════════════════════════════════════════════ */
     :root {
-      /* Catppuccin Mocha palette */
       --base:    #1e1e2e;
       --mantle:  #181825;
       --crust:   #11111b;
@@ -261,6 +264,22 @@
       margin: 24px 0;
     }
 
+    /* Blog images */
+    .blog-img {
+      max-width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--surface0);
+      margin: 16px 0;
+    }
+    .blog-img-caption {
+      color: var(--overlay0);
+      font-size: 11px;
+      font-style: italic;
+      text-align: center;
+      margin-top: -10px;
+      margin-bottom: 16px;
+    }
+
     /* Blog card */
     .blog-card {
       background: var(--mantle);
@@ -390,6 +409,27 @@
 </head>
 <body>
 
+<!-- ════════════════════════════════════════════════════════════════════════════
+     HTML STRUCTURE GUIDE
+     ════════════════════════════════════════════════════════════════════════════
+
+     To add a new page:
+     1. Add a tab in #tabbar
+     2. Add file tree entry in #filetree
+     3. Add page content in #content (class="page" id="page-{name}")
+     4. Update JavaScript config (pages array, fileNames object)
+
+     To add a blog post:
+     1. Add blog-card in #page-blog
+     2. Add file tree entry in blog/posts/ folder
+     3. Add post content in JavaScript 'posts' object
+
+     To add a doc:
+     1. Add doc-link in #page-docs nav
+     2. Add file tree entry in docs/ folder
+     3. Add doc content in JavaScript 'docs' object
+     ──────────────────────────────────────────────────────────────────────────── -->
+
 <!-- Buffer tab bar -->
 <div id="tabbar">
   <div class="tab active" onclick="switchPage('home', this)" data-page="home">
@@ -406,6 +446,9 @@
   </div>
   <div class="tab" onclick="switchPage('contact', this)" data-page="contact">
     <span class="icon">✉️</span> contact.md
+  </div>
+  <div class="tab" onclick="switchPage('personal', this)" data-page="personal">
+    <span class="icon">📁</span> personal/
   </div>
 </div>
 
@@ -438,17 +481,20 @@
             <div class="tree-folder">
               <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 posts/</div>
               <div class="tree-children">
-                <div class="tree-item" onclick="switchPageByKey('blog'); openPost('post1')">
+                <div class="tree-item" id="ft-post1" onclick="switchPageByKey('blog'); openPost('post1')">
                   <span class="ti">📄</span> nextflow-nix.md
                 </div>
-                <div class="tree-item" onclick="switchPageByKey('blog'); openPost('post2')">
+                <div class="tree-item" id="ft-post2" onclick="switchPageByKey('blog'); openPost('post2')">
                   <span class="ti">📄</span> neovim-config.md
                 </div>
-                <div class="tree-item" onclick="switchPageByKey('blog'); openPost('post3')">
+                <div class="tree-item" id="ft-post3" onclick="switchPageByKey('blog'); openPost('post3')">
                   <span class="ti">📄</span> scrna-seq-scvi.md
                 </div>
-                <div class="tree-item" onclick="switchPageByKey('blog'); openPost('post4')">
+                <div class="tree-item" id="ft-post4" onclick="switchPageByKey('blog'); openPost('post4')">
                   <span class="ti">📄</span> gwas-pvalue.md
+                </div>
+                <div class="tree-item" id="ft-post5" onclick="switchPageByKey('blog'); openPost('post5')">
+                  <span class="ti">📄</span> umap-visualization.md
                 </div>
               </div>
             </div>
@@ -466,23 +512,41 @@
             <div class="tree-folder">
               <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 cheatsheets/</div>
               <div class="tree-children">
-                <div class="tree-item" onclick="switchPageByKey('docs'); showDoc('snakemake')">
+                <div class="tree-item" id="ft-doc-snakemake" onclick="switchPageByKey('docs'); showDoc('snakemake')">
                   <span class="ti">📄</span> snakemake.md
                 </div>
-                <div class="tree-item" onclick="switchPageByKey('docs'); showDoc('samtools')">
+                <div class="tree-item" id="ft-doc-samtools" onclick="switchPageByKey('docs'); showDoc('samtools')">
                   <span class="ti">📄</span> samtools.md
                 </div>
-                <div class="tree-item" onclick="switchPageByKey('docs'); showDoc('r-bioc')">
+                <div class="tree-item" id="ft-doc-r-bioc" onclick="switchPageByKey('docs'); showDoc('r-bioc')">
                   <span class="ti">📄</span> bioconductor.md
                 </div>
               </div>
             </div>
-            <!-- docs/guides/ subfolder -->
+            <!-- docs/knowledge_base/ subfolder -->
             <div class="tree-folder">
-              <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 guides/</div>
+              <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 knowledge_base/</div>
               <div class="tree-children">
-                <div class="tree-item" onclick="switchPageByKey('docs'); showDoc('vim-bio')">
-                  <span class="ti">📄</span> neovim-bio.md
+                <div class="tree-item" id="ft-doc-kb-genomics" onclick="switchPageByKey('docs'); showDoc('kb-genomics')">
+                  <span class="ti">📄</span> genomics.md
+                </div>
+                <div class="tree-item" id="ft-doc-kb-statistics" onclick="switchPageByKey('docs'); showDoc('kb-statistics')">
+                  <span class="ti">📄</span> statistics.md
+                </div>
+                <div class="tree-item" id="ft-doc-kb-ml" onclick="switchPageByKey('docs'); showDoc('kb-ml')">
+                  <span class="ti">📄</span> machine-learning.md
+                </div>
+              </div>
+            </div>
+            <!-- docs/manuals/ subfolder -->
+            <div class="tree-folder">
+              <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 manuals/</div>
+              <div class="tree-children">
+                <div class="tree-item" id="ft-doc-manual-cluster" onclick="switchPageByKey('docs'); showDoc('manual-cluster')">
+                  <span class="ti">📄</span> cluster-setup.md
+                </div>
+                <div class="tree-item" id="ft-doc-manual-docker" onclick="switchPageByKey('docs'); showDoc('manual-docker')">
+                  <span class="ti">📄</span> docker-guide.md
                 </div>
               </div>
             </div>
@@ -495,6 +559,25 @@
           <div class="tree-children">
             <div class="tree-item" id="ft-cv" onclick="switchPageByKey('cv')">
               <span class="ti">📄</span> cv.md
+            </div>
+          </div>
+        </div>
+
+        <!-- personal/ folder -->
+        <div class="tree-folder">
+          <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 personal/</div>
+          <div class="tree-children">
+            <div class="tree-item" id="ft-personal" onclick="switchPageByKey('personal')">
+              <span class="ti">📄</span> index.md
+            </div>
+            <div class="tree-item" id="ft-personal-hobbies" onclick="switchPageByKey('personal'); showPersonal('hobbies')">
+              <span class="ti">📄</span> hobbies.md
+            </div>
+            <div class="tree-item" id="ft-personal-music" onclick="switchPageByKey('personal'); showPersonal('music')">
+              <span class="ti">📄</span> music.md
+            </div>
+            <div class="tree-item" id="ft-personal-books" onclick="switchPageByKey('personal'); showPersonal('books')">
+              <span class="ti">📄</span> books.md
             </div>
           </div>
         </div>
@@ -627,6 +710,17 @@
           </div>
         </div>
 
+        <div class="blog-card" onclick="openPost('post5')">
+          <div class="bc-title">Visualizing single-cell clustering with UMAP: best practices</div>
+          <div class="bc-meta">2025-02-15 &nbsp;·&nbsp; 7 min read &nbsp;·&nbsp;
+            <span class="tag">scRNA-seq</span><span class="tag">visualization</span><span class="tag">python</span>
+          </div>
+          <div class="bc-desc">
+            A practical guide to creating publication-ready UMAP plots with scanpy, including
+            color palettes, annotations, and common pitfalls to avoid.
+          </div>
+        </div>
+
         <!-- Expanded post view -->
         <div id="post-view" style="display:none">
           <div style="margin-bottom:16px">
@@ -642,10 +736,18 @@
         <div class="meta">technical notes, cheatsheets &amp; references</div>
 
         <div class="doc-nav">
-          <span class="doc-link" onclick="showDoc('snakemake')">Snakemake cheatsheet</span>
-          <span class="doc-link" onclick="showDoc('samtools')">samtools one-liners</span>
-          <span class="doc-link" onclick="showDoc('r-bioc')">Bioconductor quick reference</span>
-          <span class="doc-link" onclick="showDoc('vim-bio')">Neovim for bioinformatics</span>
+          <span class="doc-link" style="color:var(--blue);font-weight:600">cheatsheets/</span>
+          <span class="doc-link" onclick="showDoc('snakemake')">Snakemake</span>
+          <span class="doc-link" onclick="showDoc('samtools')">samtools</span>
+          <span class="doc-link" onclick="showDoc('r-bioc')">Bioconductor</span>
+          <span class="doc-link" style="color:var(--blue);font-weight:600;margin-top:8px">knowledge_base/</span>
+          <span class="doc-link" onclick="showDoc('kb-genomics')">Genomics</span>
+          <span class="doc-link" onclick="showDoc('kb-statistics')">Statistics</span>
+          <span class="doc-link" onclick="showDoc('kb-ml')">Machine Learning</span>
+          <span class="doc-link" style="color:var(--blue);font-weight:600;margin-top:8px">manuals/</span>
+          <span class="doc-link" onclick="showDoc('manual-cluster')">Cluster setup</span>
+          <span class="doc-link" onclick="showDoc('manual-docker')">Docker guide</span>
+          <span class="doc-link" onclick="resetDocsView()" style="margin-top:12px">← back to readme</span>
         </div>
 
         <div id="doc-content">
@@ -798,6 +900,41 @@ matrix   = <span class="str">"@you:matrix.org"</span></div>
 <span class="kw">start_date</span> = <span class="str">"Q1 2026"</span></div>
       </div>
 
+      <!-- ═══ PERSONAL ═══ -->
+      <div class="page" id="page-personal">
+        <div class="h1">personal</div>
+        <div class="meta">life beyond the terminal</div>
+
+        <div class="doc-nav">
+          <span class="doc-link" onclick="showPersonal('hobbies')">Hobbies</span>
+          <span class="doc-link" onclick="showPersonal('music')">Music</span>
+          <span class="doc-link" onclick="showPersonal('books')">Books</span>
+          <span class="doc-link" onclick="resetPersonalView()">← back to index</span>
+        </div>
+
+        <div id="personal-content">
+          <div class="h2">beyond the code</div>
+          <p>
+            When I'm not debugging pipelines or tweaking my Neovim config, you'll find me exploring
+            other interests that keep life interesting.
+          </p>
+
+          <div class="h3">quick facts</div>
+          <div class="skill-row">
+            <span class="skill-chip">hiking</span>
+            <span class="skill-chip">coffee enthusiast</span>
+            <span class="skill-chip">vinyl collector</span>
+            <span class="skill-chip">sci-fi reader</span>
+            <span class="skill-chip">amateur photographer</span>
+          </div>
+
+          <div class="callout info">
+            <div class="cl-label">🎯 CURRENT OBSESSION</div>
+            Learning to play chess properly after years of just knowing how the pieces move.
+          </div>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /editor -->
 </div><!-- /workspace -->
@@ -820,58 +957,60 @@ matrix   = <span class="str">"@you:matrix.org"</span></div>
 </div>
 
 <script>
-  // Toggle folder open/closed
-  function toggleFolder(folderEl) {
-    folderEl.classList.toggle('open');
-  }
+/* ╔══════════════════════════════════════════════════════════════════════════╗
+   ║                                                                          ║
+   ║   WEBSITE CONFIGURATION & CONTENT                                        ║
+   ║                                                                          ║
+   ║   This file is organized into two main sections:                         ║
+   ║   1. CONTENT - All text content, posts, docs (edit these!)               ║
+   ║   2. LOGIC   - Navigation, highlighting, UI functions (don't touch)      ║
+   ║                                                                          ║
+   ╚══════════════════════════════════════════════════════════════════════════╝ */
 
-  const pages = ['home','blog','docs','cv','contact'];
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SECTION 1: SITE CONFIGURATION
+   ════════════════════════════════════════════════════════════════════════════
+
+   To add a new page:
+   1. Add entry to 'pages' array
+   2. Add entry to 'fileNames' object
+   3. Add HTML page in the content div (id="page-{name}")
+   4. Add tab in #tabbar
+   5. Add file tree entry in #filetree
+   ──────────────────────────────────────────────────────────────────────────── */
+
+  const pages = ['home','blog','docs','cv','contact','personal'];
+
   const fileNames = {
     home: 'about.md',
     blog: 'blog/index.md',
     docs: 'docs/readme.md',
     cv:   'career/cv.md',
-    contact: 'contact.md'
-  };
-  const docNames = {
-    home: 'about.md',
-    blog: 'blog/',
-    docs: 'docs/',
-    cv: 'cv.md',
-    contact: 'contact.md'
+    contact: 'contact.md',
+    personal: 'personal/index.md'
   };
 
-  let currentPage = 'home';
 
-  function switchPage(key, tabEl) {
-    pages.forEach(p => {
-      document.getElementById('page-' + p).classList.remove('active');
-      document.getElementById('ft-' + p).classList.remove('active');
-    });
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+/* ════════════════════════════════════════════════════════════════════════════
+   SECTION 2: BLOG POSTS CONTENT
+   ════════════════════════════════════════════════════════════════════════════
 
-    document.getElementById('page-' + key).classList.add('active');
-    document.getElementById('ft-' + key).classList.add('active');
-    if (tabEl) tabEl.classList.add('active');
+   To add a new blog post:
+   1. Add new entry below (e.g., post6: `...`)
+   2. Add blog-card in HTML (id="page-blog" section)
+   3. Add file tree entry (blog/posts/ folder, with id="ft-post6")
 
-    document.getElementById('sl-file').textContent = fileNames[key];
-    document.getElementById('cmdtext').textContent = ':e ' + fileNames[key];
-    currentPage = key;
-    updateLineNums();
-    // reset post view when leaving blog
-    if (key !== 'blog') {
-      document.querySelectorAll('.blog-card').forEach(c => c.style.display = '');
-      document.getElementById('post-view').style.display = 'none';
-    }
-    updateStatus();
-  }
+   Available CSS classes for content:
+   - .h1, .h2, .h3        → Headings
+   - .meta                → Date/tags line
+   - .tag                 → Tag badges
+   - .code-block          → Code snippets
+   - .callout .info/tip/warn → Callout boxes
+   - .blog-img            → Images
+   - .blog-img-caption    → Image captions
+   ──────────────────────────────────────────────────────────────────────────── */
 
-  function switchPageByKey(key) {
-    const tab = document.querySelector('[data-page="' + key + '"]');
-    switchPage(key, tab);
-  }
-
-  // Blog post expand
   const posts = {
     post1: `
       <div class="h1">Building a reproducible RNA-seq pipeline with Nextflow + Nix</div>
@@ -938,25 +1077,62 @@ lambda_gc = <span class="kw">function</span>(pvals) <span class="kw">{</span>
 <span class="kw">}</span>
 lambda_gc(gwas_results$P)  <span class="cm"># ideally close to 1.0</span></div>
       <div class="callout warn"><div class="cl-label">⚠️  WARNING</div>λ &gt; 1.05 in a well-powered GWAS often signals population stratification. Always include principal components as covariates.</div>
-      <p>I'll walk through a simulation in R showing how uncorrected stratification inflates your test statistics, and how including PCs fixes it.</p>`
+      <p>I'll walk through a simulation in R showing how uncorrected stratification inflates your test statistics, and how including PCs fixes it.</p>`,
+    post5: `
+      <div class="h1">Visualizing single-cell clustering with UMAP: best practices</div>
+      <div class="meta">2025-02-15 &nbsp;·&nbsp; 7 min &nbsp;·&nbsp; <span class="tag">scRNA-seq</span><span class="tag">visualization</span><span class="tag">python</span></div>
+      <div class="h2">the power of UMAP</div>
+      <p>UMAP (Uniform Manifold Approximation and Projection) has become the standard for visualizing high-dimensional single-cell data. Unlike t-SNE, it preserves more global structure and runs faster on large datasets.</p>
+      <img class="blog-img" src="https://scanpy.readthedocs.io/en/stable/_images/tutorials_basics_clustering-2017_26_0.png" alt="UMAP visualization of PBMC clusters">
+      <div class="blog-img-caption">Figure 1: UMAP embedding of 3k PBMCs colored by Leiden clustering. Each dot represents a single cell.</div>
+      <div class="h2">generating publication-ready plots</div>
+      <p>The default scanpy plots are good for exploration, but journals expect polished figures. Here's my workflow for creating clean visualizations.</p>
+      <div class="code-block"><span class="kw">import</span> scanpy <span class="kw">as</span> sc
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cm"># Load and process data</span>
+adata = sc.datasets.pbmc3k_processed()
+
+<span class="cm"># Create figure with custom styling</span>
+<span class="kw">with</span> plt.rc_context({<span class="str">'figure.figsize'</span>: (<span class="num">8</span>, <span class="num">8</span>), <span class="str">'figure.dpi'</span>: <span class="num">150</span>}):
+    sc.pl.umap(adata,
+               color=<span class="str">'louvain'</span>,
+               palette=<span class="str">'tab20'</span>,
+               frameon=<span class="kw">False</span>,
+               title=<span class="str">''</span>,
+               legend_loc=<span class="str">'on data'</span>,
+               legend_fontsize=<span class="num">10</span>)
+    plt.savefig(<span class="str">'umap_clusters.pdf'</span>, bbox_inches=<span class="str">'tight'</span>)</div>
+      <div class="h2">common pitfalls</div>
+      <div class="callout warn"><div class="cl-label">⚠️  WARNING</div>Never interpret UMAP distances as biological similarity. Clusters that appear close may not be transcriptionally related — always validate with marker genes.</div>
+      <p>Other mistakes to avoid:</p>
+      <p>• <strong>Over-clustering</strong>: More clusters isn't always better. Validate with known markers.<br>
+      • <strong>Ignoring batch effects</strong>: Run Harmony or scVI before UMAP if you have multiple samples.<br>
+      • <strong>Default parameters</strong>: Tune <code style="color:var(--peach)">n_neighbors</code> and <code style="color:var(--peach)">min_dist</code> for your dataset size.</p>
+      <div class="callout tip"><div class="cl-label">💡 TIP</div>Export figures as PDF or SVG for publications. Raster formats like PNG will look pixelated when journals resize them.</div>`
+
+    /* ─── ADD NEW BLOG POSTS ABOVE THIS LINE ─── */
   };
 
-  function openPost(id) {
-    document.querySelectorAll('.blog-card').forEach(c => c.style.display = 'none');
-    const pv = document.getElementById('post-view');
-    document.getElementById('post-content').innerHTML = posts[id];
-    pv.style.display = 'block';
-    updateLineNums();
-  }
-  function closePost() {
-    document.querySelectorAll('.blog-card').forEach(c => c.style.display = '');
-    document.getElementById('post-view').style.display = 'none';
-    updateLineNums();
-  }
 
-  // Docs section
+/* ════════════════════════════════════════════════════════════════════════════
+   SECTION 3: DOCS CONTENT
+   ════════════════════════════════════════════════════════════════════════════
+
+   To add a new doc:
+   1. Add new entry below with unique key (e.g., 'my-doc': `...`)
+   2. Add doc-link in HTML doc-nav (id="page-docs" section)
+   3. Add file tree entry (docs/ folder, with id="ft-doc-{key}")
+
+   Folder structure in docs:
+   - cheatsheets/  → Quick reference guides
+   - knowledge_base/ → Conceptual knowledge
+   - manuals/      → Step-by-step guides
+   ──────────────────────────────────────────────────────────────────────────── */
+
   const docs = {
-    snakemake: document.getElementById('doc-content').innerHTML,
+    /* ─── cheatsheets/ ─── */
+    snakemake: document.getElementById('doc-content').innerHTML,  // Default doc (defined in HTML)
     samtools: `<div class="h2">samtools one-liners</div>
       <div class="h3">index &amp; quick stats</div>
       <div class="code-block"><span class="cm"># index bam</span>
@@ -983,24 +1159,302 @@ res[order(res$padj),] |> head(<span class="num">20</span>)</div>
 gr2 = GRanges(<span class="str">"chr1"</span>, IRanges(<span class="num">1500</span>, <span class="num">3000</span>))
 findOverlaps(gr1, gr2)
 subsetByOverlaps(peaks, genes, maxgap=<span class="num">500</span>)</div>`,
-    'vim-bio': `<div class="h2">Neovim for bioinformatics</div>
-      <div class="h3">useful keymaps</div>
-      <div class="code-block"><span class="cm">-- send selection to REPL (vim-slime)</span>
-vim.keymap.set(<span class="str">"v"</span>, <span class="str">"&lt;C-c&gt;&lt;C-c&gt;"</span>, <span class="str">"&lt;Plug&gt;SlimeRegionSend"</span>)
-<span class="cm">-- open terminal in split</span>
-vim.keymap.set(<span class="str">"n"</span>, <span class="str">"&lt;leader&gt;tt"</span>, <span class="str">":split | term&lt;CR&gt;"</span>)
-<span class="cm">-- run current snakemake file dry-run</span>
-vim.keymap.set(<span class="str">"n"</span>, <span class="str">"&lt;leader&gt;sn"</span>,
-  <span class="str">":!snakemake -n -s %&lt;CR&gt;"</span>)</div>
-      <div class="callout info"><div class="cl-label">ℹ️  LSP setup</div>Install <code style="color:var(--peach)">pyright</code> via npm and <code style="color:var(--peach)">r-languageserver</code> inside R for full autocomplete in both languages.</div>`
+
+    /* ─── knowledge_base/ ─── */
+    'kb-genomics': `<div class="h2">genomics knowledge base</div>
+      <div class="h3">key concepts</div>
+      <p>A collection of fundamental genomics concepts and definitions I frequently reference.</p>
+      <div class="h3">sequencing technologies</div>
+      <p>• <strong>Illumina</strong>: Short reads (150-300bp), high accuracy, high throughput<br>
+      • <strong>PacBio</strong>: Long reads (10-25kb), lower accuracy, great for assemblies<br>
+      • <strong>Oxford Nanopore</strong>: Ultra-long reads (up to 2Mb), real-time sequencing</p>
+      <div class="h3">file formats</div>
+      <div class="code-block"><span class="cm"># Common bioinformatics formats</span>
+FASTQ  → raw sequencing reads
+BAM    → aligned reads (binary)
+VCF    → variant calls
+BED    → genomic intervals
+GTF    → gene annotations
+H5AD   → single-cell data (AnnData)</div>
+      <div class="callout info"><div class="cl-label">📖 RESOURCE</div>UCSC Genome Browser FAQ: <a href="#">genome.ucsc.edu/FAQ</a></div>`,
+    'kb-statistics': `<div class="h2">statistics knowledge base</div>
+      <div class="h3">hypothesis testing refresher</div>
+      <p>Notes on statistical concepts I keep forgetting and re-learning.</p>
+      <div class="h3">multiple testing correction</div>
+      <p>• <strong>Bonferroni</strong>: Divide α by number of tests. Conservative.<br>
+      • <strong>Benjamini-Hochberg</strong>: Controls FDR. Less conservative, more power.<br>
+      • <strong>q-value</strong>: FDR analog of p-value. Use for genomics.</p>
+      <div class="code-block"><span class="cm"># R: adjust p-values</span>
+p.adjust(pvals, method = <span class="str">"BH"</span>)     <span class="cm"># Benjamini-Hochberg</span>
+p.adjust(pvals, method = <span class="str">"bonferroni"</span>)</div>
+      <div class="callout warn"><div class="cl-label">⚠️  REMEMBER</div>p-value ≠ probability that null is true. It's P(data | H₀).</div>`,
+    'kb-ml': `<div class="h2">machine learning knowledge base</div>
+      <div class="h3">ML in bioinformatics</div>
+      <p>Quick reference for ML concepts applied to biological data.</p>
+      <div class="h3">common applications</div>
+      <p>• <strong>Clustering</strong>: Cell type identification (Leiden, Louvain)<br>
+      • <strong>Dimensionality reduction</strong>: PCA, UMAP, t-SNE<br>
+      • <strong>Classification</strong>: Variant pathogenicity prediction<br>
+      • <strong>Deep learning</strong>: Protein structure (AlphaFold), cell embeddings (scVI)</p>
+      <div class="h3">key libraries</div>
+      <div class="code-block"><span class="cm"># Python ML stack for bio</span>
+scikit-learn  → classical ML
+pytorch       → deep learning
+scvi-tools    → single-cell VAEs
+scanpy        → single-cell analysis</div>`,
+
+    /* ─── manuals/ ─── */
+    'manual-cluster': `<div class="h2">cluster setup guide</div>
+      <div class="meta">notes for HPC environments</div>
+      <div class="h3">SLURM basics</div>
+      <div class="code-block"><span class="cm"># Submit a job</span>
+sbatch script.sh
+
+<span class="cm"># Check queue</span>
+squeue -u $USER
+
+<span class="cm"># Cancel job</span>
+scancel <span class="num">12345</span>
+
+<span class="cm"># Interactive session</span>
+srun --pty -p interactive -t <span class="num">2</span>:<span class="num">00</span>:<span class="num">00</span> bash</div>
+      <div class="h3">typical job script</div>
+      <div class="code-block"><span class="cm">#!/bin/bash</span>
+<span class="cm">#SBATCH --job-name=align</span>
+<span class="cm">#SBATCH --partition=compute</span>
+<span class="cm">#SBATCH --cpus-per-task=8</span>
+<span class="cm">#SBATCH --mem=32G</span>
+<span class="cm">#SBATCH --time=4:00:00</span>
+
+module load bwa samtools
+bwa mem -t 8 ref.fa reads.fq | samtools sort -o out.bam</div>
+      <div class="callout tip"><div class="cl-label">💡 TIP</div>Always request 10-20% more memory than you think you need.</div>`,
+    'manual-docker': `<div class="h2">docker guide</div>
+      <div class="meta">containerization for reproducibility</div>
+      <div class="h3">essential commands</div>
+      <div class="code-block"><span class="cm"># Build image</span>
+docker build -t myimage:v1 .
+
+<span class="cm"># Run container</span>
+docker run -it --rm -v $(pwd):/data myimage:v1
+
+<span class="cm"># List containers</span>
+docker ps -a
+
+<span class="cm"># Clean up</span>
+docker system prune -a</div>
+      <div class="h3">bioinformatics Dockerfile</div>
+      <div class="code-block"><span class="kw">FROM</span> condaforge/mambaforge:latest
+
+<span class="kw">RUN</span> mamba install -y -c bioconda \\
+    bwa samtools bcftools \\
+    && mamba clean -afy
+
+<span class="kw">WORKDIR</span> /data
+<span class="kw">CMD</span> [<span class="str">"bash"</span>]</div>
+      <div class="callout info"><div class="cl-label">🐳 SINGULARITY</div>On HPC without Docker, use <code style="color:var(--peach)">singularity pull docker://image</code></div>`
+
+    /* ─── ADD NEW DOCS ABOVE THIS LINE ─── */
   };
 
-  function showDoc(key) {
-    document.getElementById('doc-content').innerHTML = docs[key];
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SECTION 4: PERSONAL CONTENT
+   ════════════════════════════════════════════════════════════════════════════
+
+   To add a new personal page:
+   1. Add new entry below with unique key (e.g., 'travel': `...`)
+   2. Add doc-link in HTML personal nav (id="page-personal" section)
+   3. Add file tree entry (personal/ folder, with id="ft-personal-{key}")
+   ──────────────────────────────────────────────────────────────────────────── */
+
+  const personalDefault = document.getElementById('personal-content').innerHTML;
+
+  const personal = {
+    hobbies: `<div class="h2">hobbies</div>
+      <p>A collection of things I enjoy when I'm not staring at a terminal.</p>
+      <div class="h3">hiking & nature</div>
+      <p>Living in Germany means easy access to amazing trails. My favorite regions are the Black Forest and the Bavarian Alps. I try to do at least one multi-day hike per year.</p>
+      <div class="h3">photography</div>
+      <p>Mostly landscapes and macro shots of plants/insects. I shoot with a Fujifilm X-T4 and occasionally develop film at home.</p>
+      <div class="h3">chess</div>
+      <p>Currently rated ~1200 on Lichess. Slowly working through "Logical Chess: Move by Move" to actually understand what I'm doing.</p>
+      <div class="callout tip"><div class="cl-label">♟️ CHALLENGE ME</div>Find me on Lichess: <a href="#">lichess.org/@/yourhandle</a></div>`,
+    music: `<div class="h2">music</div>
+      <p>I collect vinyl and spend too much money on records I don't have time to listen to.</p>
+      <div class="h3">current rotation</div>
+      <div class="skill-row">
+        <span class="skill-chip hl">post-rock</span>
+        <span class="skill-chip hl">ambient</span>
+        <span class="skill-chip">jazz</span>
+        <span class="skill-chip">electronic</span>
+        <span class="skill-chip">classical</span>
+      </div>
+      <div class="h3">favorite albums (2025)</div>
+      <p>• Godspeed You! Black Emperor — <em>Lift Your Skinny Fists</em><br>
+      • Brian Eno — <em>Ambient 1: Music for Airports</em><br>
+      • Boards of Canada — <em>Music Has the Right to Children</em><br>
+      • Ryo Fukui — <em>Scenery</em></p>
+      <div class="code-block"><span class="cm"># current setup</span>
+turntable = <span class="str">"Audio-Technica AT-LP120X"</span>
+speakers  = <span class="str">"Kali Audio LP-6"</span>
+headphones = <span class="str">"Sennheiser HD 600"</span></div>`,
+    books: `<div class="h2">books</div>
+      <p>Mostly science fiction and non-fiction about science, technology, and philosophy.</p>
+      <div class="h3">currently reading</div>
+      <p>• <em>Project Hail Mary</em> — Andy Weir<br>
+      • <em>The Structure of Scientific Revolutions</em> — Thomas Kuhn</p>
+      <div class="h3">all-time favorites</div>
+      <p>• <em>Dune</em> — Frank Herbert<br>
+      • <em>Gödel, Escher, Bach</em> — Douglas Hofstadter<br>
+      • <em>The Expanse</em> series — James S.A. Corey<br>
+      • <em>Surely You're Joking, Mr. Feynman!</em> — Richard Feynman<br>
+      • <em>Neuromancer</em> — William Gibson</p>
+      <div class="callout info"><div class="cl-label">📚 GOODREADS</div>Track my reading at <a href="#">goodreads.com/yourhandle</a></div>`
+
+    /* ─── ADD NEW PERSONAL PAGES ABOVE THIS LINE ─── */
+  };
+
+
+/* ╔══════════════════════════════════════════════════════════════════════════╗
+   ║                                                                          ║
+   ║   LOGIC SECTION - Navigation & UI Functions                              ║
+   ║   (You probably don't need to edit anything below this line)             ║
+   ║                                                                          ║
+   ╚══════════════════════════════════════════════════════════════════════════╝ */
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PAGE NAVIGATION
+   ════════════════════════════════════════════════════════════════════════════ */
+
+  let currentPage = 'home';
+
+  function switchPage(key, tabEl) {
+    pages.forEach(p => {
+      document.getElementById('page-' + p).classList.remove('active');
+      document.getElementById('ft-' + p).classList.remove('active');
+    });
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+    document.getElementById('page-' + key).classList.add('active');
+    document.getElementById('ft-' + key).classList.add('active');
+    if (tabEl) tabEl.classList.add('active');
+
+    document.getElementById('sl-file').textContent = fileNames[key];
+    document.getElementById('cmdtext').textContent = ':e ' + fileNames[key];
+    currentPage = key;
+    updateLineNums();
+
+    // Reset views when navigating to index pages
+    if (key === 'blog') {
+      document.querySelectorAll('.blog-card').forEach(c => c.style.display = '');
+      document.getElementById('post-view').style.display = 'none';
+      document.querySelectorAll('[id^="ft-post"]').forEach(el => el.classList.remove('active'));
+    }
+    if (key === 'docs') {
+      document.getElementById('doc-content').innerHTML = docs['snakemake'];
+      document.querySelectorAll('[id^="ft-doc-"]').forEach(el => el.classList.remove('active'));
+    }
+    if (key === 'personal') {
+      document.getElementById('personal-content').innerHTML = personalDefault;
+      document.querySelectorAll('[id^="ft-personal-"]').forEach(el => el.classList.remove('active'));
+    }
+    updateStatus();
+  }
+
+  function switchPageByKey(key) {
+    const tab = document.querySelector('[data-page="' + key + '"]');
+    switchPage(key, tab);
+  }
+
+  function toggleFolder(folderEl) {
+    folderEl.classList.toggle('open');
+  }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BLOG FUNCTIONS
+   ════════════════════════════════════════════════════════════════════════════ */
+
+  function openPost(id) {
+    document.querySelectorAll('.blog-card').forEach(c => c.style.display = 'none');
+    document.getElementById('post-content').innerHTML = posts[id];
+    document.getElementById('post-view').style.display = 'block';
+    document.getElementById('ft-blog').classList.remove('active');
+    Object.keys(posts).forEach(p => {
+      const el = document.getElementById('ft-' + p);
+      if (el) el.classList.remove('active');
+    });
+    document.getElementById('ft-' + id).classList.add('active');
     updateLineNums();
   }
 
-  // Line numbers
+  function closePost() {
+    document.querySelectorAll('.blog-card').forEach(c => c.style.display = '');
+    document.getElementById('post-view').style.display = 'none';
+    Object.keys(posts).forEach(p => {
+      const el = document.getElementById('ft-' + p);
+      if (el) el.classList.remove('active');
+    });
+    document.getElementById('ft-blog').classList.add('active');
+    updateLineNums();
+  }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DOCS FUNCTIONS
+   ════════════════════════════════════════════════════════════════════════════ */
+
+  function showDoc(key) {
+    document.getElementById('doc-content').innerHTML = docs[key];
+    document.getElementById('ft-docs').classList.remove('active');
+    Object.keys(docs).forEach(d => {
+      const el = document.getElementById('ft-doc-' + d);
+      if (el) el.classList.remove('active');
+    });
+    const activeEl = document.getElementById('ft-doc-' + key);
+    if (activeEl) activeEl.classList.add('active');
+    updateLineNums();
+  }
+
+  function resetDocsView() {
+    document.getElementById('doc-content').innerHTML = docs['snakemake'];
+    document.querySelectorAll('[id^="ft-doc-"]').forEach(el => el.classList.remove('active'));
+    document.getElementById('ft-docs').classList.add('active');
+    updateLineNums();
+  }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PERSONAL FUNCTIONS
+   ════════════════════════════════════════════════════════════════════════════ */
+
+  function showPersonal(key) {
+    document.getElementById('personal-content').innerHTML = personal[key];
+    // Update file tree highlighting
+    document.getElementById('ft-personal').classList.remove('active');
+    Object.keys(personal).forEach(p => {
+      const el = document.getElementById('ft-personal-' + p);
+      if (el) el.classList.remove('active');
+    });
+    const activeEl = document.getElementById('ft-personal-' + key);
+    if (activeEl) activeEl.classList.add('active');
+    updateLineNums();
+  }
+
+  function resetPersonalView() {
+    document.getElementById('personal-content').innerHTML = personalDefault;
+    document.querySelectorAll('[id^="ft-personal-"]').forEach(el => el.classList.remove('active'));
+    document.getElementById('ft-personal').classList.add('active');
+    updateLineNums();
+  }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   UI UTILITIES
+   ════════════════════════════════════════════════════════════════════════════ */
+
   function updateLineNums() {
     const content = document.getElementById('content');
     const lh = 22; // approx line height px
@@ -1024,9 +1478,15 @@ vim.keymap.set(<span class="str">"n"</span>, <span class="str">"&lt;leader&gt;sn
     document.getElementById('sl-pct').textContent = p === '0%' ? 'Top' : p === '100%' ? 'Bot' : p;
   }
 
-  document.getElementById('content').addEventListener('scroll', updateStatus);
+/* ════════════════════════════════════════════════════════════════════════════
+   EVENT LISTENERS & INITIALIZATION
+   ════════════════════════════════════════════════════════════════════════════ */
 
-  // Keyboard navigation (vim-like)
+  // Scroll event listeners
+  document.getElementById('content').addEventListener('scroll', updateStatus);
+  document.getElementById('content').addEventListener('scroll', updateLineNums);
+
+  // Keyboard navigation (vim-like: Tab to switch buffers)
   document.addEventListener('keydown', e => {
     const idx = pages.indexOf(currentPage);
     if (e.key === 'Tab') {
@@ -1040,10 +1500,10 @@ vim.keymap.set(<span class="str">"n"</span>, <span class="str">"&lt;leader&gt;sn
     }
   });
 
-  // Init
+  // Initialize on page load
   updateLineNums();
   updateStatus();
-  document.getElementById('content').addEventListener('scroll', updateLineNums);
+
 </script>
 </body>
 </html>
