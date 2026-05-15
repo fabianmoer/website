@@ -517,6 +517,9 @@
                 <div class="tree-item" id="ft-post5" onclick="switchPageByKey('blog'); openPost('post5')">
                   <span class="ti">📄</span> umap-visualization.md
                 </div>
+                <div class="tree-item" id="ft-post6" onclick="switchPageByKey('blog'); openPost('post6')">
+                  <span class="ti">📄</span> dna-perspective.md
+                </div>
               </div>
             </div>
           </div>
@@ -742,6 +745,17 @@
           </div>
         </div>
 
+        <div class="blog-card" onclick="openPost('post6')">
+          <div class="bc-title">The double helix: a programmer's perspective on DNA</div>
+          <div class="bc-meta">2025-12-20 &nbsp;·&nbsp; 6 min read &nbsp;·&nbsp;
+            <span class="tag">biology</span><span class="tag">fundamentals</span><span class="tag">musings</span>
+          </div>
+          <div class="bc-desc">
+            Stepping back from the pipelines to appreciate the elegance of DNA — nature's
+            ultimate source code and the most complex system we know of.
+          </div>
+        </div>
+
         <!-- Expanded post view -->
         <div id="post-view" style="display:none">
           <div style="margin-bottom:16px">
@@ -782,7 +796,7 @@
       <!-- ═══ CV ═══ -->
       <div class="page" id="page-cv">
         <div class="h1">curriculum vitae</div>
-        <div class="meta">last updated <span>2025-11</span> &nbsp;·&nbsp; <a href="#">download pdf</a></div>
+        <div class="meta">last updated <span>2025-11</span> &nbsp;·&nbsp; <a href="generic.pdf" download>download pdf</a></div>
 
         <div class="h2">education</div>
         <div class="timeline-item">
@@ -1088,7 +1102,26 @@ adata = sc.datasets.pbmc3k_processed()
       <p>• <strong>Over-clustering</strong>: More clusters isn't always better. Validate with known markers.<br>
       • <strong>Ignoring batch effects</strong>: Run Harmony or scVI before UMAP if you have multiple samples.<br>
       • <strong>Default parameters</strong>: Tune <code style="color:var(--peach)">n_neighbors</code> and <code style="color:var(--peach)">min_dist</code> for your dataset size.</p>
-      <div class="callout tip"><div class="cl-label">💡 TIP</div>Export figures as PDF or SVG for publications. Raster formats like PNG will look pixelated when journals resize them.</div>`
+      <div class="callout tip"><div class="cl-label">💡 TIP</div>Export figures as PDF or SVG for publications. Raster formats like PNG will look pixelated when journals resize them.</div>`,
+    post6: `
+      <div class="h1">The double helix: a programmer's perspective on DNA</div>
+      <div class="meta">2025-12-20 &nbsp;·&nbsp; 6 min read &nbsp;·&nbsp; <span class="tag">biology</span><span class="tag">fundamentals</span><span class="tag">musings</span></div>
+      <img class="blog-img" src="dna.jpeg" alt="DNA double helix structure">
+      <div class="blog-img-caption">Figure 1: The iconic double helix structure of DNA.</div>
+      <div class="h2">nature's source code</div>
+      <p>As bioinformaticians, we spend our days parsing, aligning, and analyzing DNA sequences. But sometimes it's worth stepping back to appreciate just how elegant this molecule really is.</p>
+      <p>DNA is essentially a quaternary encoding system — four nucleotides (A, T, G, C) that encode all the information needed to build and maintain a living organism. If you think about it, it's the ultimate compression algorithm, refined over 3.8 billion years of evolution.</p>
+      <div class="h2">the numbers are staggering</div>
+      <div class="code-block"><span class="cm"># Human genome stats</span>
+base_pairs     = <span class="num">3_000_000_000</span>  <span class="cm"># 3 billion bp</span>
+genes          = <span class="num">~20_000</span>         <span class="cm"># protein-coding</span>
+cell_length    = <span class="num">2</span> <span class="cm"># meters of DNA per cell</span>
+total_length   = <span class="num">2e14</span> <span class="cm"># meters in your body (~200 AU)</span></div>
+      <p>That's right — if you stretched out all the DNA in your body, it would reach from the Sun past Pluto's orbit. And it's all packed into cells just micrometers wide.</p>
+      <div class="h2">why i love this field</div>
+      <p>Every time I run a variant caller or cluster single-cell data, I'm interacting with this incredible molecular machinery. The genome is buggy, redundant, and full of dead code (looking at you, pseudogenes) — just like any legacy codebase. But it works, and understanding it is endlessly fascinating.</p>
+      <div class="callout info"><div class="cl-label">🧬 FUN FACT</div>Your DNA is 99.9% identical to every other human on Earth. All of human genetic diversity comes from that 0.1%.</div>
+      <p>Next time you're frustrated debugging a pipeline, remember: you're reverse-engineering the most complex system we know of. That's pretty cool.</p>`
 
     /* ─── ADD NEW BLOG POSTS ABOVE THIS LINE ─── */
   };
