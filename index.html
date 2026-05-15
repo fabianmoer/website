@@ -295,6 +295,27 @@
     .blog-card .bc-meta  { color: var(--overlay0); font-size: 11px; margin-bottom: 8px; }
     .blog-card .bc-desc  { color: var(--subtext0); font-size: 12.5px; }
 
+    /* Doc cards */
+    .doc-section {
+      color: var(--blue);
+      font-weight: 600;
+      font-size: 13px;
+      margin: 20px 0 8px;
+    }
+    .doc-section:first-of-type { margin-top: 0; }
+    .doc-card {
+      background: var(--mantle);
+      border: 1px solid var(--surface0);
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 14px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .doc-card:hover { border-color: var(--mauve); background: var(--surface0); }
+
     /* About / skill chips */
     .skill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 18px; }
     .skill-chip {
@@ -425,7 +446,7 @@
      3. Add post content in JavaScript 'posts' object
 
      To add a doc:
-     1. Add doc-link in #page-docs nav
+     1. Add doc-card in #page-docs (with appropriate section)
      2. Add file tree entry in docs/ folder
      3. Add doc content in JavaScript 'docs' object
      ──────────────────────────────────────────────────────────────────────────── -->
@@ -512,29 +533,14 @@
             <div class="tree-folder">
               <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 cheatsheets/</div>
               <div class="tree-children">
-                <div class="tree-item" id="ft-doc-snakemake" onclick="switchPageByKey('docs'); showDoc('snakemake')">
+                <div class="tree-item" id="ft-doc-snakemake" onclick="switchPageByKey('docs'); openDoc('snakemake')">
                   <span class="ti">📄</span> snakemake.md
                 </div>
-                <div class="tree-item" id="ft-doc-samtools" onclick="switchPageByKey('docs'); showDoc('samtools')">
+                <div class="tree-item" id="ft-doc-samtools" onclick="switchPageByKey('docs'); openDoc('samtools')">
                   <span class="ti">📄</span> samtools.md
                 </div>
-                <div class="tree-item" id="ft-doc-r-bioc" onclick="switchPageByKey('docs'); showDoc('r-bioc')">
+                <div class="tree-item" id="ft-doc-r-bioc" onclick="switchPageByKey('docs'); openDoc('r-bioc')">
                   <span class="ti">📄</span> bioconductor.md
-                </div>
-              </div>
-            </div>
-            <!-- docs/knowledge_base/ subfolder -->
-            <div class="tree-folder">
-              <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 knowledge_base/</div>
-              <div class="tree-children">
-                <div class="tree-item" id="ft-doc-kb-genomics" onclick="switchPageByKey('docs'); showDoc('kb-genomics')">
-                  <span class="ti">📄</span> genomics.md
-                </div>
-                <div class="tree-item" id="ft-doc-kb-statistics" onclick="switchPageByKey('docs'); showDoc('kb-statistics')">
-                  <span class="ti">📄</span> statistics.md
-                </div>
-                <div class="tree-item" id="ft-doc-kb-ml" onclick="switchPageByKey('docs'); showDoc('kb-ml')">
-                  <span class="ti">📄</span> machine-learning.md
                 </div>
               </div>
             </div>
@@ -542,11 +548,26 @@
             <div class="tree-folder">
               <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 manuals/</div>
               <div class="tree-children">
-                <div class="tree-item" id="ft-doc-manual-cluster" onclick="switchPageByKey('docs'); showDoc('manual-cluster')">
+                <div class="tree-item" id="ft-doc-manual-cluster" onclick="switchPageByKey('docs'); openDoc('manual-cluster')">
                   <span class="ti">📄</span> cluster-setup.md
                 </div>
-                <div class="tree-item" id="ft-doc-manual-docker" onclick="switchPageByKey('docs'); showDoc('manual-docker')">
+                <div class="tree-item" id="ft-doc-manual-docker" onclick="switchPageByKey('docs'); openDoc('manual-docker')">
                   <span class="ti">📄</span> docker-guide.md
+                </div>
+              </div>
+            </div>
+            <!-- docs/knowledge_base/ subfolder -->
+            <div class="tree-folder">
+              <div class="tree-item dir" onclick="toggleFolder(this.parentElement)">📁 knowledge_base/</div>
+              <div class="tree-children">
+                <div class="tree-item" id="ft-doc-kb-genomics" onclick="switchPageByKey('docs'); openDoc('kb-genomics')">
+                  <span class="ti">📄</span> genomics.md
+                </div>
+                <div class="tree-item" id="ft-doc-kb-statistics" onclick="switchPageByKey('docs'); openDoc('kb-statistics')">
+                  <span class="ti">📄</span> statistics.md
+                </div>
+                <div class="tree-item" id="ft-doc-kb-ml" onclick="switchPageByKey('docs'); openDoc('kb-ml')">
+                  <span class="ti">📄</span> machine-learning.md
                 </div>
               </div>
             </div>
@@ -735,68 +756,26 @@
         <div class="h1">docs</div>
         <div class="meta">technical notes, cheatsheets &amp; references</div>
 
-        <div class="doc-nav">
-          <span class="doc-link" style="color:var(--blue);font-weight:600">cheatsheets/</span>
-          <span class="doc-link" onclick="showDoc('snakemake')">Snakemake</span>
-          <span class="doc-link" onclick="showDoc('samtools')">samtools</span>
-          <span class="doc-link" onclick="showDoc('r-bioc')">Bioconductor</span>
-          <span class="doc-link" style="color:var(--blue);font-weight:600;margin-top:8px">knowledge_base/</span>
-          <span class="doc-link" onclick="showDoc('kb-genomics')">Genomics</span>
-          <span class="doc-link" onclick="showDoc('kb-statistics')">Statistics</span>
-          <span class="doc-link" onclick="showDoc('kb-ml')">Machine Learning</span>
-          <span class="doc-link" style="color:var(--blue);font-weight:600;margin-top:8px">manuals/</span>
-          <span class="doc-link" onclick="showDoc('manual-cluster')">Cluster setup</span>
-          <span class="doc-link" onclick="showDoc('manual-docker')">Docker guide</span>
-          <span class="doc-link" onclick="resetDocsView()" style="margin-top:12px">← back to readme</span>
-        </div>
+        <div class="doc-section">cheatsheets/</div>
+        <div class="doc-card" onclick="openDoc('snakemake')">Snakemake</div>
+        <div class="doc-card" onclick="openDoc('samtools')">samtools</div>
+        <div class="doc-card" onclick="openDoc('r-bioc')">Bioconductor</div>
 
-        <div id="doc-content">
-          <!-- default doc -->
-          <div class="h2">snakemake cheatsheet</div>
+        <div class="doc-section">manuals/</div>
+        <div class="doc-card" onclick="openDoc('manual-cluster')">Cluster setup</div>
+        <div class="doc-card" onclick="openDoc('manual-docker')">Docker guide</div>
 
-          <div class="h3">minimal rule</div>
-          <div class="code-block"><span class="kw">rule</span> <span class="fn">align_reads</span>:
-    <span class="tp">input</span>:
-        r1 = <span class="str">"data/{sample}_R1.fastq.gz"</span>,
-        r2 = <span class="str">"data/{sample}_R2.fastq.gz"</span>,
-        ref = <span class="str">"ref/genome.fa"</span>
-    <span class="tp">output</span>:
-        bam = <span class="str">"results/{sample}.bam"</span>
-    <span class="tp">threads</span>: <span class="num">8</span>
-    <span class="tp">shell</span>:
-        <span class="str">"""
-        bwa mem -t {threads} {input.ref} {input.r1} {input.r2} \
-          | samtools sort -o {output.bam}
-        samtools index {output.bam}
-        """</span></div>
+        <div class="doc-section">knowledge_base/</div>
+        <div class="doc-card" onclick="openDoc('kb-genomics')">Genomics</div>
+        <div class="doc-card" onclick="openDoc('kb-statistics')">Statistics</div>
+        <div class="doc-card" onclick="openDoc('kb-ml')">Machine Learning</div>
 
-          <div class="h3">dry run &amp; useful flags</div>
-          <div class="code-block"><span class="cm"># dry run — see what would execute</span>
-snakemake <span class="op">-n</span> <span class="op">--forceall</span>
-
-<span class="cm"># run on SLURM cluster</span>
-snakemake <span class="op">--executor</span> slurm <span class="op">--jobs</span> <span class="num">50</span> \
-  <span class="op">--default-resources</span> slurm_partition=<span class="str">"compute"</span> mem_mb=<span class="num">8000</span>
-
-<span class="cm"># generate rulegraph</span>
-snakemake <span class="op">--rulegraph</span> | dot <span class="op">-Tpng</span> <span class="op">-o</span> dag.png</div>
-
-          <div class="callout tip">
-            <div class="cl-label">💡 TIP</div>
-            Always use <code style="color:var(--peach)">--sdm conda</code> or a Nix shell to pin
-            all tool versions. Reproducibility is non-negotiable in bioinformatics.
+        <!-- Expanded doc view -->
+        <div id="doc-view" style="display:none">
+          <div style="margin-bottom:16px">
+            <span style="color:var(--overlay0);cursor:pointer;font-size:12px" onclick="closeDoc()">← back to docs</span>
           </div>
-
-          <div class="h3">checkpoint (scatter-gather)</div>
-          <div class="code-block"><span class="kw">checkpoint</span> <span class="fn">split_chromosomes</span>:
-    <span class="tp">input</span>: <span class="str">"data/variants.vcf.gz"</span>
-    <span class="tp">output</span>: directory(<span class="str">"split/"</span>)
-    <span class="tp">shell</span>: <span class="str">"bcftools view {input} | split_by_chrom.sh {output}"</span>
-
-<span class="kw">def</span> <span class="fn">gather_inputs</span>(wildcards):
-    checkpoint_output = checkpoints.split_chromosomes.get().output[<span class="num">0</span>]
-    <span class="kw">return</span> expand(<span class="str">"split/{chrom}.vcf"</span>,
-                   chrom=glob_wildcards(os.path.join(checkpoint_output, <span class="str">"{chrom}.vcf"</span>)).chrom)</div>
+          <div id="doc-content"></div>
         </div>
       </div>
 
@@ -1121,7 +1100,7 @@ adata = sc.datasets.pbmc3k_processed()
 
    To add a new doc:
    1. Add new entry below with unique key (e.g., 'my-doc': `...`)
-   2. Add doc-link in HTML doc-nav (id="page-docs" section)
+   2. Add doc-card in HTML (id="page-docs" section)
    3. Add file tree entry (docs/ folder, with id="ft-doc-{key}")
 
    Folder structure in docs:
@@ -1132,7 +1111,47 @@ adata = sc.datasets.pbmc3k_processed()
 
   const docs = {
     /* ─── cheatsheets/ ─── */
-    snakemake: document.getElementById('doc-content').innerHTML,  // Default doc (defined in HTML)
+    snakemake: `<div class="h2">snakemake cheatsheet</div>
+      <div class="h3">minimal rule</div>
+      <div class="code-block"><span class="kw">rule</span> <span class="fn">align_reads</span>:
+    <span class="tp">input</span>:
+        r1 = <span class="str">"data/{sample}_R1.fastq.gz"</span>,
+        r2 = <span class="str">"data/{sample}_R2.fastq.gz"</span>,
+        ref = <span class="str">"ref/genome.fa"</span>
+    <span class="tp">output</span>:
+        bam = <span class="str">"results/{sample}.bam"</span>
+    <span class="tp">threads</span>: <span class="num">8</span>
+    <span class="tp">shell</span>:
+        <span class="str">"""
+        bwa mem -t {threads} {input.ref} {input.r1} {input.r2} \\
+          | samtools sort -o {output.bam}
+        samtools index {output.bam}
+        """</span></div>
+      <div class="h3">dry run &amp; useful flags</div>
+      <div class="code-block"><span class="cm"># dry run — see what would execute</span>
+snakemake <span class="op">-n</span> <span class="op">--forceall</span>
+
+<span class="cm"># run on SLURM cluster</span>
+snakemake <span class="op">--executor</span> slurm <span class="op">--jobs</span> <span class="num">50</span> \\
+  <span class="op">--default-resources</span> slurm_partition=<span class="str">"compute"</span> mem_mb=<span class="num">8000</span>
+
+<span class="cm"># generate rulegraph</span>
+snakemake <span class="op">--rulegraph</span> | dot <span class="op">-Tpng</span> <span class="op">-o</span> dag.png</div>
+      <div class="callout tip">
+        <div class="cl-label">💡 TIP</div>
+        Always use <code style="color:var(--peach)">--sdm conda</code> or a Nix shell to pin
+        all tool versions. Reproducibility is non-negotiable in bioinformatics.
+      </div>
+      <div class="h3">checkpoint (scatter-gather)</div>
+      <div class="code-block"><span class="kw">checkpoint</span> <span class="fn">split_chromosomes</span>:
+    <span class="tp">input</span>: <span class="str">"data/variants.vcf.gz"</span>
+    <span class="tp">output</span>: directory(<span class="str">"split/"</span>)
+    <span class="tp">shell</span>: <span class="str">"bcftools view {input} | split_by_chrom.sh {output}"</span>
+
+<span class="kw">def</span> <span class="fn">gather_inputs</span>(wildcards):
+    checkpoint_output = checkpoints.split_chromosomes.get().output[<span class="num">0</span>]
+    <span class="kw">return</span> expand(<span class="str">"split/{chrom}.vcf"</span>,
+                   chrom=glob_wildcards(os.path.join(checkpoint_output, <span class="str">"{chrom}.vcf"</span>)).chrom)</div>`,
     samtools: `<div class="h2">samtools one-liners</div>
       <div class="h3">index &amp; quick stats</div>
       <div class="code-block"><span class="cm"># index bam</span>
@@ -1353,7 +1372,9 @@ headphones = <span class="str">"Sennheiser HD 600"</span></div>`,
       document.querySelectorAll('[id^="ft-post"]').forEach(el => el.classList.remove('active'));
     }
     if (key === 'docs') {
-      document.getElementById('doc-content').innerHTML = docs['snakemake'];
+      document.querySelectorAll('.doc-card').forEach(c => c.style.display = '');
+      document.querySelectorAll('.doc-section').forEach(s => s.style.display = '');
+      document.getElementById('doc-view').style.display = 'none';
       document.querySelectorAll('[id^="ft-doc-"]').forEach(el => el.classList.remove('active'));
     }
     if (key === 'personal') {
@@ -1372,6 +1393,16 @@ headphones = <span class="str">"Sennheiser HD 600"</span></div>`,
     folderEl.classList.toggle('open');
   }
 
+  function expandParentFolders(element) {
+    let parent = element.parentElement;
+    while (parent && parent.id !== 'filetree') {
+      if (parent.classList.contains('tree-folder')) {
+        parent.classList.add('open');
+      }
+      parent = parent.parentElement;
+    }
+  }
+
 
 /* ════════════════════════════════════════════════════════════════════════════
    BLOG FUNCTIONS
@@ -1386,7 +1417,9 @@ headphones = <span class="str">"Sennheiser HD 600"</span></div>`,
       const el = document.getElementById('ft-' + p);
       if (el) el.classList.remove('active');
     });
-    document.getElementById('ft-' + id).classList.add('active');
+    const activeEl = document.getElementById('ft-' + id);
+    activeEl.classList.add('active');
+    expandParentFolders(activeEl);
     updateLineNums();
   }
 
@@ -1406,20 +1439,28 @@ headphones = <span class="str">"Sennheiser HD 600"</span></div>`,
    DOCS FUNCTIONS
    ════════════════════════════════════════════════════════════════════════════ */
 
-  function showDoc(key) {
+  function openDoc(key) {
+    document.querySelectorAll('.doc-card').forEach(c => c.style.display = 'none');
+    document.querySelectorAll('.doc-section').forEach(s => s.style.display = 'none');
     document.getElementById('doc-content').innerHTML = docs[key];
+    document.getElementById('doc-view').style.display = 'block';
     document.getElementById('ft-docs').classList.remove('active');
     Object.keys(docs).forEach(d => {
       const el = document.getElementById('ft-doc-' + d);
       if (el) el.classList.remove('active');
     });
     const activeEl = document.getElementById('ft-doc-' + key);
-    if (activeEl) activeEl.classList.add('active');
+    if (activeEl) {
+      activeEl.classList.add('active');
+      expandParentFolders(activeEl);
+    }
     updateLineNums();
   }
 
-  function resetDocsView() {
-    document.getElementById('doc-content').innerHTML = docs['snakemake'];
+  function closeDoc() {
+    document.querySelectorAll('.doc-card').forEach(c => c.style.display = '');
+    document.querySelectorAll('.doc-section').forEach(s => s.style.display = '');
+    document.getElementById('doc-view').style.display = 'none';
     document.querySelectorAll('[id^="ft-doc-"]').forEach(el => el.classList.remove('active'));
     document.getElementById('ft-docs').classList.add('active');
     updateLineNums();
@@ -1439,7 +1480,10 @@ headphones = <span class="str">"Sennheiser HD 600"</span></div>`,
       if (el) el.classList.remove('active');
     });
     const activeEl = document.getElementById('ft-personal-' + key);
-    if (activeEl) activeEl.classList.add('active');
+    if (activeEl) {
+      activeEl.classList.add('active');
+      expandParentFolders(activeEl);
+    }
     updateLineNums();
   }
 
